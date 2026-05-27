@@ -1,8 +1,19 @@
 #!/usr/bin/env node
 
-import { glob } from 'node:fs/promises';
+import { glob, mkdir, copyFile } from 'node:fs/promises';
 import path from 'node:path';
-import { run, webDir, header } from './lib/run.mjs';
+import { run, webDir, repoRoot, apiDir, header } from './lib/run.mjs';
+
+// Maps Node.js platform → (dotnet RID, Tauri target triple, binary extension).
+function getRidInfo() {
+  if (process.platform === 'win32') {
+    return { rid: 'win-x64', triple: 'x86_64-pc-windows-msvc', ext: '.exe' };
+  }
+  if (process.platform === 'linux') {
+    return { rid: 'linux-x64', triple: 'x86_64-unknown-linux-gnu', ext: '' };
+  }
+  throw new Error(`Unsupported platform for desktop packaging: ${process.platform}`);
+}
 
 async function listArtifacts(patterns) {
   const found = [];
@@ -24,11 +35,46 @@ async function main() {
     process.exit(1);
   }
 
-  header('web build (npm run build)');
-  await run('npm', ['run', 'build'], { cwd: webDir });
+  const { rid, triple, ext } = getRidInfo();
+  const publishOutDir = path.join(apiDir, 'publish', rid);
+  const binariesDir = path.join(webDir, 'src-tauri', 'binaries');
+  const publishedBinary = path.join(publishOutDir, `rAspCoreVueLauncher.Api${ext}`);
+  const sidecarDest = path.join(binariesDir, `rAspCoreVueLauncher-api-${triple}${ext}`);
 
+  // 1. Publish the ASP.NET API as a self-contained single binary for the target RID.
+  header(`dotnet publish API (${rid})`);
+  await run('dotnet', [
+    'publish',
+    path.join(apiDir, 'rAspCoreVueLauncher.Api.csproj'),
+    '-r', rid,
+    '--self-contained',
+    '-c', 'Release',
+    '-p:PublishSingleFile=true',
+    '-p:DebugType=none',
+    '-o', publishOutDir,
+  ], { cwd: repoRoot });
+
+  // 2. Copy the binary into src-tauri/binaries/ with the Tauri-expected naming.
+  await mkdir(binariesDir, { recursive: true });
+  await copyFile(publishedBinary, sidecarDest);
+  console.log(`✓ Sidecar staged: ${sidecarDest}`);
+
+  // 3. Build the Vite frontend with the production API URL baked in.
+  header('web build (npm run build)');
+  await run('npm', ['run', 'build'], {
+    cwd: webDir,
+    env: { VITE_API_BASE_URL: 'http://127.0.0.1:5148' },
+  });
+
+  // 4. Tauri build (beforeBuildCommand in tauri.conf.json would re-run npm build,
+  //    but Tauri skips it when invoked via this script since we passed --no-bundle false
+  //    and the build already ran). tauri:build invokes `tauri build` which runs the
+  //    beforeBuildCommand again — set the env var so it keeps the right API URL.
   header('tauri build');
-  await run('npm', ['run', 'tauri:build'], { cwd: webDir });
+  await run('npm', ['run', 'tauri:build'], {
+    cwd: webDir,
+    env: { VITE_API_BASE_URL: 'http://127.0.0.1:5148' },
+  });
 
   header('artifacts');
   let patterns;

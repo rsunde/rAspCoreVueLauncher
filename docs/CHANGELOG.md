@@ -2,6 +2,21 @@
 
 Feature-level history of `rAspCoreVueLauncher`, newest first. Grouped by commit; not a literal git log. For the current state, see [`HANDOVER.md`](HANDOVER.md). For what's coming, see [`ROADMAP.md`](ROADMAP.md).
 
+## 2026-05-27 — ROADMAP backlog sprint
+
+- **Tauri sidecar wiring** — `lib.rs` spawns the ASP.NET API as a `tauri-plugin-shell` sidecar in release builds (`!cfg!(debug_assertions)`); kills it on window destroy. `tauri.conf.json` declares `externalBin`. `package-desktop.mjs` publishes a self-contained single-file binary (`dotnet publish -r <rid> --self-contained -p:PublishSingleFile=true`) and copies it to `src-tauri/binaries/rAspCoreVueLauncher-api-{triple}{ext}` before the Tauri bundle step. `VITE_API_BASE_URL=http://127.0.0.1:5148` is set for the production Vite build.
+- **Sensor bridge wired** — `main.ts` now imports and calls `startSensorBridge({ apiBaseUrl: import.meta.env.VITE_API_BASE_URL ?? '' })` after mount.
+- **`VITE_API_BASE_URL` env var** — `src/api/client.ts` reads `import.meta.env.VITE_API_BASE_URL ?? '/'`; `sensorsBridge` receives it from `main.ts`. `.env.production.example` added.
+- **OpenAPI codegen script** — `scripts/generate-types.mjs` fetches `/openapi/v1.json` from the running API and generates `src/types/api.gen.ts` via `openapi-typescript`. Wired as `npm run gen:types`. `openapi-typescript` added as web devDep.
+- **Auth UI** — New `src/stores/auth.ts` (Pinia) manages token + user, restores from `localStorage`, sets/clears the axios `Authorization` header. New `src/views/LoginView.vue` is a shadcn-vue card form. Router guard redirects unauthenticated users to `/login`. App.vue shows a logout button when authenticated.
+- **EF Core baseline migration** — `DatabaseSeeder` now calls `MigrateAsync()`. Baseline `Initial` migration hand-authored in `src/rAspCoreVueLauncher.Api/Migrations/` covering all ASP.NET Identity tables (SQLite column types). `dotnet ef migrations add` failed on 10.0.8 due to a `MissingMethodException` in `AbstractionsStrings.ArgumentIsEmpty` — filed as a tooling limitation; migration written manually. 6/6 tests pass.
+
+## 2026-05-27 — Handover docs + cleanup (`f702cb5` + post)
+
+- Added `docs/HANDOVER.md`, `docs/CHANGELOG.md`, `docs/ROADMAP.md` — snapshot of current state, feature history, and recommended next sequence for the next session.
+- Renamed the `API: Tests (debug)` launch config to `API: Run Tests` to reflect that it runs tests but does not support in-process breakpoints (use C# CodeLens "Debug Test" for that).
+- Fixed a broken absolute-path wiki-link in `memory/feedback_use_subagents.md`.
+
 ## 2026-05-27 — Interactive wizard + VS Code launch profiles (`9a09ec2`)
 
 - Added `scripts/wizard.mjs` driven by `@clack/prompts`, exposing Run / Build / Package / Setup / Clean menus from a single `npm run wizard` entry point.

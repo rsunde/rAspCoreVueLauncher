@@ -109,7 +109,7 @@
       "presentation": { "group": "2_dev", "order": 8 }
     },
     {
-      "name": "API: Tests (debug)",
+      "name": "API: Run Tests",
       "type": "coreclr",
       "request": "launch",
       "program": "dotnet",

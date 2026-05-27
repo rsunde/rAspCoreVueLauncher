@@ -12,7 +12,8 @@
     "package:desktop": "node scripts/package-desktop.mjs",
     "package:android": "node scripts/package-android.mjs",
     "package:ios": "node scripts/package-ios.mjs",
-    "wizard": "node scripts/wizard.mjs"
+    "wizard": "node scripts/wizard.mjs",
+    "gen:types": "node scripts/generate-types.mjs"
   },
   "dependencies": {
     "@clack/prompts": "^0.8.2"

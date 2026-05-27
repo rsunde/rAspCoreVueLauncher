@@ -1,5 +1,6 @@
 // Mirrors rAspCoreVueLauncher.Shared.Hardware.*
-// In future, generate this from the API's OpenAPI document.
+// Regenerate from the live API: npm run gen:types (API must be running)
+// Generated output goes to api.gen.ts — this file is the stable hand-maintained fallback.
 export interface HardwareInfo {
   osPlatform: string
   osDescription: string

@@ -84,7 +84,7 @@ Zero-dep (except for the wizard's `@clack/prompts`). Cross-platform: a `.cmd` sh
 |-------|---------|
 | `1_app` | 5 compounds (`Full Stack: API (HTTP) + Vue`, `… + Tauri`, `… + Capacitor Android`, `… + Web Preview`, `API (HTTPS) + Vue`) |
 | `2_dev` | API HTTP / HTTPS, Web Vite dev, Web Preview, Tauri dev, Tauri Build, Capacitor Android, Capacitor iOS |
-| `3_test` | `API: Tests (debug)`, `API: Attach` |
+| `3_test` | `API: Run Tests`, `API: Attach` |
 | `4_workspace` | Wizard, Setup check, Build All, Test All, Clean, Package: Desktop, Package: Android, Package All |
 
 `tasks.json` provides matching `api: build`, `web: build`, and orchestrator pre-launch tasks. All JSON parses strict.
@@ -120,7 +120,7 @@ What was actually exercised on the dev host (Windows 11) vs. what was written bu
 Design choices that look like bugs but are intentional. Read these before "fixing" them.
 
 - **Wizard's "Full stack" option prints a two-terminal recipe** instead of forking processes. `@clack/prompts` owns the TTY; spawning two long-lived children alongside it causes ANSI corruption and unkillable processes. The VS Code compound is the supported path.
-- **`API: Tests (debug)` launch config runs `dotnet test`** but won't break on breakpoints in test code — proper test debugging uses the C# extension's CodeLens "Debug Test" buttons. The config is keepable for one-shot runs; remove if it confuses people. See [`ROADMAP.md`](ROADMAP.md).
+- **`API: Run Tests` launch config runs `dotnet test`** but won't break on breakpoints in test code — proper test debugging uses the C# extension's CodeLens "Debug Test" buttons. The config is for one-shot runs only.
 - **`MobileSensorCache` is a single-field, latest-wins cache.** No per-client history. Adequate for current use; a future agent may want a `Dictionary<clientId, reading>` with eviction.
 - **Tests don't swap `IMobileSensorCache` in `TestAppFactory`.** Each test creates a fresh factory, so isolation works today. If MSTest were ever configured to share factories across tests, cache state would leak. Flagged here, not fixed.
 - **`sensorsBridge.ts` does NOT fill `health` or `biometric` blocks.** Those DTOs exist server-side, but populating them needs Capacitor plugins (HealthKit / Google Fit / `LocalAuthentication`). The bundled bridge is web-API-only.

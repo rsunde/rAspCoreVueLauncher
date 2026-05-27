@@ -10,9 +10,7 @@ public static class DatabaseSeeder
     {
         using var scope = services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        // Template repo: use EnsureCreated for zero-friction first run.
-        // Swap to MigrateAsync once you start tracking schema with `dotnet ef migrations add`.
-        await db.Database.EnsureCreatedAsync();
+        await db.Database.MigrateAsync();
 
         var users = scope.ServiceProvider.GetRequiredService<UserManager<AppUser>>();
         if (await users.FindByEmailAsync(SeedData.DefaultUserEmail) is null)

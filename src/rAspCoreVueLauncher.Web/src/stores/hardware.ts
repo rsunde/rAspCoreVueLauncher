@@ -53,5 +53,5 @@ export const useHardwareStore = defineStore('hardware', () => {
     }
   }
 
-  return { info, sensors, loading, error, sensorClockOffsetMs, loadInfo, loadSensors, startPolling, stopPolling }
+  return { info, sensors, loading, error, sensorClockOffsetMs, loadInfo, loadSensors, postMobileSensors, startPolling, stopPolling }
 })
