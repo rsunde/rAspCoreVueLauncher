@@ -123,9 +123,8 @@ The API seeds a single dev user on first run:
 - Desktop bundles are produced by `npm run package:desktop` (Tauri 2). To ship the API alongside the desktop binary, publish a self-contained build and reference it as a Tauri `externalBin` sidecar in `src-tauri/tauri.conf.json`. (TODO — not wired in this template.)
 - Android and iOS native platform folders aren't checked in. `npm run package:android` runs `npx cap add android` on demand before invoking Gradle. For mobile, the Vue app is served from the device — it must talk to a remote ASP.NET API rather than localhost. Configure the API base URL via Vite env vars before building.
 
-## What's not here yet
+## Handover & roadmap
 
-- Tauri sidecar wiring to ship the ASP.NET binary inside the desktop bundle
-- iOS / Android Capacitor platforms (added on demand)
-- A real production JWT key strategy
-- EF Core migrations (uses `EnsureCreated` today; swap to `MigrateAsync` once you add `dotnet ef migrations`)
+- [`docs/HANDOVER.md`](docs/HANDOVER.md) — current state of the repo, verified vs. unexercised, known caveats.
+- [`docs/CHANGELOG.md`](docs/CHANGELOG.md) — feature history, newest first.
+- [`docs/ROADMAP.md`](docs/ROADMAP.md) — what's next (Tauri sidecar, codegen, distribution gaps, cleanup).
