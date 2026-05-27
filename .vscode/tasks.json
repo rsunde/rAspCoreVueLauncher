@@ -49,6 +49,14 @@
       "group": "build"
     },
     {
+      "label": "web: preview",
+      "type": "shell",
+      "command": "npm run preview",
+      "options": { "cwd": "${workspaceFolder}/src/rAspCoreVueLauncher.Web" },
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
       "label": "tauri: dev",
       "type": "shell",
       "command": "npm run tauri:dev",
@@ -63,6 +71,58 @@
       "args": ["test", "${workspaceFolder}/rAspCoreVueLauncher.slnx"],
       "group": "test",
       "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "wizard",
+      "type": "shell",
+      "command": "node scripts/wizard.mjs",
+      "options": { "cwd": "${workspaceFolder}" },
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "build: all",
+      "type": "npm",
+      "script": "build",
+      "path": "",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "test: all",
+      "type": "npm",
+      "script": "test",
+      "path": "",
+      "group": "test",
+      "problemMatcher": []
+    },
+    {
+      "label": "clean",
+      "type": "npm",
+      "script": "clean",
+      "path": "",
+      "problemMatcher": []
+    },
+    {
+      "label": "package: desktop",
+      "type": "npm",
+      "script": "package:desktop",
+      "path": "",
+      "problemMatcher": []
+    },
+    {
+      "label": "package: android",
+      "type": "npm",
+      "script": "package:android",
+      "path": "",
+      "problemMatcher": []
+    },
+    {
+      "label": "package: all",
+      "type": "npm",
+      "script": "package",
+      "path": "",
+      "problemMatcher": []
     }
   ]
 }

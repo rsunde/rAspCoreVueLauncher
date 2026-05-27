@@ -2,7 +2,7 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "API (hot reload)",
+      "name": "API (HTTP)",
       "type": "coreclr",
       "request": "launch",
       "preLaunchTask": "api: build",
@@ -15,7 +15,31 @@
         "pattern": "\\bNow listening on:\\s+(https?://\\S+)",
         "uriFormat": "%s/scalar/v1"
       },
-      "env": { "ASPNETCORE_ENVIRONMENT": "Development" }
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "ASPNETCORE_URLS": "http://localhost:5148"
+      },
+      "presentation": { "group": "2_dev", "order": 1 }
+    },
+    {
+      "name": "API (HTTPS)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "api: build",
+      "program": "${workspaceFolder}/src/rAspCoreVueLauncher.Api/bin/Debug/net10.0/rAspCoreVueLauncher.Api.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/src/rAspCoreVueLauncher.Api",
+      "stopAtEntry": false,
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "\\bNow listening on:\\s+(https?://\\S+)",
+        "uriFormat": "%s/scalar/v1"
+      },
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "ASPNETCORE_URLS": "https://localhost:7102"
+      },
+      "presentation": { "group": "2_dev", "order": 2 }
     },
     {
       "name": "Web (Vite dev)",
@@ -25,7 +49,20 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev"],
       "console": "integratedTerminal",
-      "skipFiles": ["<node_internals>/**"]
+      "skipFiles": ["<node_internals>/**"],
+      "presentation": { "group": "2_dev", "order": 3 }
+    },
+    {
+      "name": "Web: Preview (built)",
+      "type": "node",
+      "request": "launch",
+      "preLaunchTask": "web: build",
+      "cwd": "${workspaceFolder}/src/rAspCoreVueLauncher.Web",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "preview"],
+      "console": "integratedTerminal",
+      "skipFiles": ["<node_internals>/**"],
+      "presentation": { "group": "2_dev", "order": 4 }
     },
     {
       "name": "Tauri (desktop dev)",
@@ -35,21 +72,179 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "tauri:dev"],
       "console": "integratedTerminal",
-      "skipFiles": ["<node_internals>/**"]
+      "skipFiles": ["<node_internals>/**"],
+      "presentation": { "group": "2_dev", "order": 5 }
+    },
+    {
+      "name": "Tauri: Build (release)",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/src/rAspCoreVueLauncher.Web",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "tauri:build"],
+      "console": "integratedTerminal",
+      "skipFiles": ["<node_internals>/**"],
+      "presentation": { "group": "2_dev", "order": 6 }
+    },
+    {
+      "name": "Capacitor: Android (dev)",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/src/rAspCoreVueLauncher.Web",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "cap:android"],
+      "console": "integratedTerminal",
+      "skipFiles": ["<node_internals>/**"],
+      "presentation": { "group": "2_dev", "order": 7 }
+    },
+    {
+      "name": "Capacitor: iOS (dev) — macOS only",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/src/rAspCoreVueLauncher.Web",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "cap:ios"],
+      "console": "integratedTerminal",
+      "skipFiles": ["<node_internals>/**"],
+      "presentation": { "group": "2_dev", "order": 8 }
+    },
+    {
+      "name": "API: Tests (debug)",
+      "type": "coreclr",
+      "request": "launch",
+      "program": "dotnet",
+      "args": ["test", "${workspaceFolder}/tests/rAspCoreVueLauncher.Api.Tests/rAspCoreVueLauncher.Api.Tests.csproj"],
+      "cwd": "${workspaceFolder}/tests/rAspCoreVueLauncher.Api.Tests",
+      "console": "integratedTerminal",
+      "stopAtEntry": false,
+      "presentation": { "group": "3_test", "order": 1 }
+    },
+    {
+      "name": "API: Attach",
+      "type": "coreclr",
+      "request": "attach",
+      "processId": "${command:pickProcess}",
+      "presentation": { "group": "3_test", "order": 2 }
+    },
+    {
+      "name": "Wizard",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["scripts/wizard.mjs"],
+      "console": "integratedTerminal",
+      "skipFiles": ["<node_internals>/**"],
+      "presentation": { "group": "4_workspace", "order": 1 }
+    },
+    {
+      "name": "Setup check",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["scripts/setup-dispatch.mjs"],
+      "console": "integratedTerminal",
+      "skipFiles": ["<node_internals>/**"],
+      "presentation": { "group": "4_workspace", "order": 2 }
+    },
+    {
+      "name": "Build All",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["scripts/build.mjs"],
+      "console": "integratedTerminal",
+      "skipFiles": ["<node_internals>/**"],
+      "presentation": { "group": "4_workspace", "order": 3 }
+    },
+    {
+      "name": "Test All",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["scripts/test.mjs"],
+      "console": "integratedTerminal",
+      "skipFiles": ["<node_internals>/**"],
+      "presentation": { "group": "4_workspace", "order": 4 }
+    },
+    {
+      "name": "Clean",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["scripts/clean.mjs"],
+      "console": "integratedTerminal",
+      "skipFiles": ["<node_internals>/**"],
+      "presentation": { "group": "4_workspace", "order": 5 }
+    },
+    {
+      "name": "Package: Desktop",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["scripts/package-desktop.mjs"],
+      "console": "integratedTerminal",
+      "skipFiles": ["<node_internals>/**"],
+      "presentation": { "group": "4_workspace", "order": 6 }
+    },
+    {
+      "name": "Package: Android",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["scripts/package-android.mjs"],
+      "console": "integratedTerminal",
+      "skipFiles": ["<node_internals>/**"],
+      "presentation": { "group": "4_workspace", "order": 7 }
+    },
+    {
+      "name": "Package All",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["scripts/package-all.mjs"],
+      "console": "integratedTerminal",
+      "skipFiles": ["<node_internals>/**"],
+      "presentation": { "group": "4_workspace", "order": 8 }
     }
   ],
   "compounds": [
     {
-      "name": "Full Stack: API + Vue",
-      "configurations": ["API (hot reload)", "Web (Vite dev)"],
+      "name": "Full Stack: API (HTTP) + Vue",
+      "configurations": ["API (HTTP)", "Web (Vite dev)"],
       "stopAll": true,
       "presentation": { "group": "1_app", "order": 1 }
     },
     {
-      "name": "Full Stack: API + Tauri",
-      "configurations": ["API (hot reload)", "Tauri (desktop dev)"],
+      "name": "Full Stack: API (HTTPS) + Vue",
+      "configurations": ["API (HTTPS)", "Web (Vite dev)"],
       "stopAll": true,
       "presentation": { "group": "1_app", "order": 2 }
+    },
+    {
+      "name": "Full Stack: API + Tauri",
+      "configurations": ["API (HTTP)", "Tauri (desktop dev)"],
+      "stopAll": true,
+      "presentation": { "group": "1_app", "order": 3 }
+    },
+    {
+      "name": "Full Stack: API + Capacitor Android",
+      "configurations": ["API (HTTP)", "Capacitor: Android (dev)"],
+      "stopAll": true,
+      "presentation": { "group": "1_app", "order": 4 }
+    },
+    {
+      "name": "Full Stack: API + Web Preview",
+      "configurations": ["API (HTTP)", "Web: Preview (built)"],
+      "stopAll": true,
+      "presentation": { "group": "1_app", "order": 5 }
     }
   ]
 }
