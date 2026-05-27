@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import type { HardwareSensors } from '@/types/hardware'
+import type { HardwareSensors, Vector3, Vector4 } from '@/types/hardware'
 
 const props = defineProps<{ sensors: HardwareSensors | null }>()
 
@@ -26,6 +26,61 @@ const memoryUsedPct = computed(() => {
   if (!props.sensors) return 0
   const { processWorkingSetMb, totalAvailableMb } = props.sensors.memory
   return totalAvailableMb > 0 ? Math.min(100, (processWorkingSetMb / totalAvailableMb) * 100) : 0
+})
+
+function fmtVec(v: Vector3 | Vector4 | null | undefined) {
+  if (!v) return ''
+  const parts = [v.x.toFixed(2), v.y.toFixed(2), v.z.toFixed(2)]
+  if ('w' in v) parts.push((v as Vector4).w.toFixed(2))
+  return parts.join(', ')
+}
+
+function fmtRelative(iso: string) {
+  const t = new Date(iso).getTime()
+  if (Number.isNaN(t)) return iso
+  const diff = Math.max(0, Math.round((Date.now() - t) / 1000))
+  if (diff < 60) return `${diff}s ago`
+  if (diff < 3600) return `${Math.round(diff / 60)}m ago`
+  if (diff < 86400) return `${Math.round(diff / 3600)}h ago`
+  return `${Math.round(diff / 86400)}d ago`
+}
+
+function fmtVal(v: unknown): string {
+  if (v === null || v === undefined) return ''
+  if (typeof v === 'number') return Number.isInteger(v) ? v.toString() : v.toFixed(2)
+  if (typeof v === 'boolean') return v ? 'yes' : 'no'
+  if (typeof v === 'object' && 'x' in (v as object) && 'y' in (v as object) && 'z' in (v as object)) {
+    return fmtVec(v as Vector3 | Vector4)
+  }
+  return String(v)
+}
+
+function humanLabel(key: string) {
+  return key
+    .replace(/([A-Z])/g, ' $1')
+    .replace(/^./, c => c.toUpperCase())
+    .trim()
+}
+
+function entries(obj: Record<string, unknown> | null | undefined) {
+  if (!obj) return [] as Array<[string, unknown]>
+  return Object.entries(obj).filter(([, v]) => v !== null && v !== undefined)
+}
+
+const mobileBlocks = computed(() => {
+  const m = props.sensors?.mobile
+  if (!m) return []
+  return [
+    { title: 'Device', data: m.device },
+    { title: 'Motion', data: m.motion },
+    { title: 'Orientation', data: m.orientation },
+    { title: 'Environment', data: m.environment },
+    { title: 'Location', data: m.location },
+    { title: 'Health', data: m.health },
+    { title: 'Biometric', data: m.biometric },
+    { title: 'Connectivity', data: m.connectivity },
+    { title: 'UserInterface', data: m.userInterface },
+  ].filter(b => b.data && entries(b.data as Record<string, unknown>).length > 0)
 })
 </script>
 
@@ -110,6 +165,27 @@ const memoryUsedPct = computed(() => {
           </div>
         </li>
       </ul>
+    </div>
+
+    <!-- Mobile sensors -->
+    <div v-if="sensors.mobile" class="rounded-lg border bg-card p-4 text-card-foreground shadow-sm">
+      <div class="mb-3 flex items-baseline justify-between gap-2">
+        <h3 class="text-sm font-medium">Mobile sensors</h3>
+        <span class="font-mono text-xs text-muted-foreground tabular-nums">
+          {{ sensors.mobile.clientId }} · {{ fmtRelative(sensors.mobile.capturedAtUtc) }}
+        </span>
+      </div>
+      <div class="grid gap-3 sm:grid-cols-2">
+        <div v-for="b in mobileBlocks" :key="b.title" class="rounded-lg border bg-card p-3 text-card-foreground shadow-sm">
+          <h4 class="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">{{ b.title }}</h4>
+          <dl class="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs">
+            <template v-for="[k, v] in entries(b.data as Record<string, unknown>)" :key="k">
+              <dt class="text-muted-foreground">{{ humanLabel(k) }}</dt>
+              <dd class="font-mono tabular-nums text-right">{{ fmtVal(v) }}</dd>
+            </template>
+          </dl>
+        </div>
+      </div>
     </div>
   </div>
   <p v-else class="text-sm text-muted-foreground">Waiting for first sensor reading…</p>

@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { api } from '@/api/client'
-import type { HardwareInfo, HardwareSensors } from '@/types/hardware'
+import type { HardwareInfo, HardwareSensors, MobileSensorReading } from '@/types/hardware'
 
 export const useHardwareStore = defineStore('hardware', () => {
   const info = ref<HardwareInfo | null>(null)
@@ -34,6 +34,10 @@ export const useHardwareStore = defineStore('hardware', () => {
     } catch (e) {
       error.value = e instanceof Error ? e.message : 'Unknown error'
     }
+  }
+
+  async function postMobileSensors(reading: MobileSensorReading) {
+    await api.post('/api/hardware/sensors/mobile', reading)
   }
 
   function startPolling(intervalMs = 2000) {

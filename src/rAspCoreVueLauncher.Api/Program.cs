@@ -54,6 +54,7 @@ builder.Services
     });
 builder.Services.AddAuthorization();
 
+builder.Services.AddSingleton<IMobileSensorCache, MobileSensorCache>();
 builder.Services.AddSingleton<IHardwareService, HardwareService>();
 
 builder.Services.AddOpenApi();

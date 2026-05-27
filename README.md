@@ -76,6 +76,12 @@ npm run dev
 dotnet test
 ```
 
+## Bring your own Vue app
+
+The bundled Vue project is a placeholder. If you already have a Vue 3 app, you can graft it onto this shell and reuse the ASP.NET API, the Tauri desktop wrapper, the Capacitor mobile wrapper, and the mobile-sensor ingest pipeline. Two paths are supported: replace the bundled Vue app with yours, or migrate the API + native shells into your repo. Mobile sensor reporting is one import and one call in `main.ts` — drop in `src/rAspCoreVueLauncher.Web/src/lib/sensorsBridge.ts` and call `startSensorBridge()`.
+
+See [`docs/BYO-APP.md`](docs/BYO-APP.md) for the full guide, options reference, iOS permission gotcha, Capacitor permissions checklist, and troubleshooting.
+
 ## Auth
 
 The API seeds a single dev user on first run:
@@ -88,10 +94,11 @@ The API seeds a single dev user on first run:
 
 ## Hardware abstraction
 
-`IHardwareService` in `rAspCoreVueLauncher.Shared` defines what the Vue frontend can ask about the device. Today: OS, architecture, machine name, cores, memory. Add sensors here as the platform implementations grow.
+`IHardwareService` in `rAspCoreVueLauncher.Shared` defines what the Vue frontend can ask about the device. Today: OS, architecture, machine name, cores, memory, and a `HardwareSensors` snapshot (CPU, memory, disks, network interfaces, battery, plus the latest mobile sensor reading). Add sensors here as the platform implementations grow.
 
 - **Desktop (Tauri)**: the ASP.NET API runs as a sidecar process. Most hardware is reachable via .NET directly.
-- **Mobile (Capacitor)**: things .NET can't reach from a webview process (camera, geolocation, accelerometer) will need a Capacitor plugin proxied through the same `IHardwareService` contract. Add plugin-backed implementations under `src/rAspCoreVueLauncher.Web/src-tauri` (for Tauri commands) or via Capacitor plugins, then expose them to Vue under the same shape the backend uses.
+- **Mobile (Capacitor)**: things .NET can't reach from a webview process (camera, geolocation, accelerometer) are pushed to the API from the Vue layer. `POST /api/hardware/sensors/mobile` accepts a `MobileSensorReading` (motion / orientation / environment / location / health / biometric / connectivity / UI groups — see `src/rAspCoreVueLauncher.Shared/Hardware/HardwareSensors.cs`) and the latest reading is echoed back under the `mobile` field on `GET /api/hardware/sensors`.
+- A drop-in module at [`src/rAspCoreVueLauncher.Web/src/lib/sensorsBridge.ts`](src/rAspCoreVueLauncher.Web/src/lib/sensorsBridge.ts) wires the standard Web Sensor APIs (DeviceMotion, DeviceOrientation, Geolocation, Battery, NetworkInformation) to that endpoint with zero dependencies. Call `startSensorBridge()` once at startup.
 
 ## Desktop bundle (Tauri)
 

@@ -18,6 +18,21 @@ public static class HardwareEndpoints
             .WithName("GetHardwareSensors")
             .Produces<HardwareSensors>();
 
+        group.MapPost("/sensors/mobile", (MobileSensorReading reading, IMobileSensorCache cache) =>
+        {
+            if (string.IsNullOrWhiteSpace(reading.ClientId))
+            {
+                return Results.ValidationProblem(new Dictionary<string, string[]>
+                {
+                    ["clientId"] = ["Required."]
+                });
+            }
+
+            cache.Store(reading);
+            return Results.Accepted();
+        })
+            .WithName("IngestMobileSensors");
+
         return app;
     }
 }

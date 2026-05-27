@@ -11,6 +11,12 @@ public sealed class HardwareService : IHardwareService
     private readonly object _cpuLock = new();
     private DateTime _lastCpuSampleAt = DateTime.UtcNow;
     private TimeSpan _lastTotalCpu = Process.GetCurrentProcess().TotalProcessorTime;
+    private readonly IMobileSensorCache _mobileCache;
+
+    public HardwareService(IMobileSensorCache mobileCache)
+    {
+        _mobileCache = mobileCache;
+    }
 
     public Task<HardwareInfo> GetInfoAsync(CancellationToken cancellationToken = default)
     {
@@ -42,7 +48,8 @@ public sealed class HardwareService : IHardwareService
                 TotalAvailableMb: gcInfo.TotalAvailableMemoryBytes / (1024 * 1024)),
             Disks: ReadDisks(),
             Networks: ReadNetworks(),
-            Battery: null);
+            Battery: null,
+            Mobile: _mobileCache.GetLatest());
 
         return Task.FromResult(sensors);
     }
