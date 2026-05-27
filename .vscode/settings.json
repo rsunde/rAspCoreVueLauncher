@@ -1,0 +1,19 @@
+{
+  "dotnet.defaultSolution": "rAspCoreVueLauncher.slnx",
+  "files.exclude": {
+    "**/bin": true,
+    "**/obj": true,
+    "**/node_modules": false
+  },
+  "search.exclude": {
+    "**/bin": true,
+    "**/obj": true,
+    "**/dist": true,
+    "**/node_modules": true,
+    "**/src-tauri/target": true,
+    "**/app.db*": true
+  },
+  "tailwindCSS.experimental.classRegex": [
+    ["cva\\(([^)]*)\\)", "[\"'`]([^\"'`]*).*?[\"'`]"]
+  ]
+}

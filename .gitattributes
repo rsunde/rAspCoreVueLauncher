@@ -1,0 +1,61 @@
+# Auto-detect text files and normalize to LF on commit.
+* text=auto eol=lf
+
+# Code & config — always LF
+*.cs           text eol=lf
+*.csproj       text eol=lf
+*.slnx         text eol=lf
+*.sln          text eol=lf -text
+*.props        text eol=lf
+*.targets      text eol=lf
+*.json         text eol=lf
+*.jsonc        text eol=lf
+*.md           text eol=lf
+*.yml          text eol=lf
+*.yaml         text eol=lf
+*.ts           text eol=lf
+*.tsx          text eol=lf
+*.js           text eol=lf
+*.cjs          text eol=lf
+*.mjs          text eol=lf
+*.vue          text eol=lf
+*.css          text eol=lf
+*.scss         text eol=lf
+*.html         text eol=lf
+*.toml         text eol=lf
+*.rs           text eol=lf
+*.sh           text eol=lf
+
+# Windows shell — keep CRLF or they may misbehave
+*.ps1          text eol=crlf
+*.psm1         text eol=crlf
+*.cmd          text eol=crlf
+*.bat          text eol=crlf
+
+# Treat SVG as text but lock to LF
+*.svg          text eol=lf
+
+# Binary assets
+*.png          binary
+*.jpg          binary
+*.jpeg         binary
+*.gif          binary
+*.ico          binary
+*.icns         binary
+*.webp         binary
+*.woff         binary
+*.woff2        binary
+*.ttf          binary
+*.otf          binary
+*.eot          binary
+*.zip          binary
+*.gz           binary
+*.dll          binary
+*.exe          binary
+*.so           binary
+*.dylib        binary
+*.pdb          binary
+
+# Lock files: text but never merge
+package-lock.json  text eol=lf -diff merge=binary
+Cargo.lock         text eol=lf -diff merge=binary

@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/rAspCoreVueLauncher.Api/rAspCoreVueLauncher.Api.csproj" />
+    <Project Path="src/rAspCoreVueLauncher.Shared/rAspCoreVueLauncher.Shared.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/rAspCoreVueLauncher.Api.Tests/rAspCoreVueLauncher.Api.Tests.csproj" />
+  </Folder>
+</Solution>

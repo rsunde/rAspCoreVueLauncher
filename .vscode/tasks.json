@@ -1,0 +1,68 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "api: build",
+      "type": "process",
+      "command": "dotnet",
+      "args": ["build", "${workspaceFolder}/src/rAspCoreVueLauncher.Api/rAspCoreVueLauncher.Api.csproj", "/property:GenerateFullPaths=true", "/consoleloggerparameters:NoSummary"],
+      "group": "build",
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "api: watch",
+      "type": "process",
+      "command": "dotnet",
+      "args": ["watch", "--project", "${workspaceFolder}/src/rAspCoreVueLauncher.Api/rAspCoreVueLauncher.Api.csproj", "run", "--launch-profile", "https"],
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "dotnet-watch",
+        "pattern": [{ "regexp": "." }],
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": ".*Building.*|.*Started.*",
+          "endsPattern": ".*Application started.*|.*Now listening on.*"
+        }
+      }
+    },
+    {
+      "label": "web: dev",
+      "type": "shell",
+      "command": "npm run dev",
+      "options": { "cwd": "${workspaceFolder}/src/rAspCoreVueLauncher.Web" },
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "vite",
+        "pattern": [{ "regexp": "." }],
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": ".*VITE.*",
+          "endsPattern": ".*ready in.*|.*Local:.*"
+        }
+      }
+    },
+    {
+      "label": "web: build",
+      "type": "shell",
+      "command": "npm run build",
+      "options": { "cwd": "${workspaceFolder}/src/rAspCoreVueLauncher.Web" },
+      "group": "build"
+    },
+    {
+      "label": "tauri: dev",
+      "type": "shell",
+      "command": "npm run tauri:dev",
+      "options": { "cwd": "${workspaceFolder}/src/rAspCoreVueLauncher.Web" },
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "test: dotnet",
+      "type": "process",
+      "command": "dotnet",
+      "args": ["test", "${workspaceFolder}/rAspCoreVueLauncher.slnx"],
+      "group": "test",
+      "problemMatcher": "$msCompile"
+    }
+  ]
+}
