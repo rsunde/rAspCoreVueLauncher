@@ -41,6 +41,21 @@ cd ..\..
 
 You now have your existing Vue app running against the ASP.NET API, with mobile sensor readings posting to `/api/hardware/sensors/mobile` every 2 seconds when accessed from a device that exposes them.
 
+## Build & package your app
+
+Once your Vue code is in place, build and package from the repo root with the workspace npm scripts:
+
+```pwsh
+pwsh scripts/setup.ps1     # Windows host check (or ./scripts/setup.sh on Linux)
+npm run build              # dotnet build + Vue build
+npm run test               # dotnet test
+npm run package:desktop    # Tauri bundle (Windows MSI / Linux deb + AppImage)
+npm run package:android    # Capacitor + Gradle release APK (needs ANDROID_HOME, JDK 17)
+npm run package            # everything available on this host
+```
+
+`npm run package:ios` and the macOS desktop bundle are skipped on Windows/Linux hosts — they exit cleanly with a "requires a macOS host" message. See the root [`README.md`](../README.md#build--package) for the full host matrix.
+
 ## Adoption paths
 
 There are two ways to combine your code with this template. Pick whichever leaves the smaller diff.

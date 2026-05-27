@@ -1,0 +1,16 @@
+{
+  "name": "raspcorevuelauncher-workspace",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "setup": "node scripts/setup-dispatch.mjs",
+    "build": "node scripts/build.mjs",
+    "test": "node scripts/test.mjs",
+    "clean": "node scripts/clean.mjs",
+    "package": "node scripts/package-all.mjs",
+    "package:desktop": "node scripts/package-desktop.mjs",
+    "package:android": "node scripts/package-android.mjs",
+    "package:ios": "node scripts/package-ios.mjs"
+  }
+}

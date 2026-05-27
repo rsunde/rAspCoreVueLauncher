@@ -37,16 +37,40 @@ tests/
 - **Optional, for desktop builds:** Rust toolchain (https://rustup.rs)
 - **Optional, for mobile builds:** Android Studio (Android) and/or Xcode on macOS (iOS)
 
-## First-time setup
+## Build & package
+
+The first thing a new contributor runs is the host setup check. It verifies the toolchain and prints install hints — it does not install anything itself.
 
 ```pwsh
-# .NET
-dotnet restore
+# Windows
+pwsh scripts/setup.ps1
 
-# Web
-cd src/rAspCoreVueLauncher.Web
-npm install
+# Linux
+./scripts/setup.sh
 ```
+
+Both scripts accept `-SkipAndroid` / `--skip-android` and `-SkipDesktop` / `--skip-desktop` to suppress checks for toolchains you don't need.
+
+Once setup reports clean, everything else is driven from the repo root via npm:
+
+```pwsh
+npm run setup              # dispatches to the right host script
+npm run build              # dotnet build + Vue build
+npm run test               # dotnet test
+npm run clean              # wipes bin/obj/dist/target/build (add --deep to also wipe node_modules)
+npm run package            # desktop + Android (if ANDROID_HOME set) + iOS (skipped off macOS)
+npm run package:desktop    # Tauri bundle for the current host (Windows MSI / Linux deb + AppImage)
+npm run package:android    # Capacitor + Gradle release APK; needs ANDROID_HOME, JDK 17, Android SDK
+npm run package:ios        # prints "requires a macOS host" on Windows/Linux and exits cleanly
+```
+
+### What you can build from each host
+
+| Host    | Desktop bundle           | Android APK | iOS  |
+|---------|--------------------------|-------------|------|
+| Windows | MSI                      | yes         | no   |
+| Linux   | `.deb` + `.AppImage`     | yes         | no   |
+| macOS   | `.app` / `.dmg` (not wired in this template) | yes | yes  |
 
 ## Run it
 
@@ -68,12 +92,6 @@ dotnet watch --project src/rAspCoreVueLauncher.Api run --launch-profile https
 # Terminal 2 — Vue dev server at http://localhost:5173 (proxies /api to the backend)
 cd src/rAspCoreVueLauncher.Web
 npm run dev
-```
-
-### Tests
-
-```pwsh
-dotnet test
 ```
 
 ## Bring your own Vue app
@@ -100,31 +118,10 @@ The API seeds a single dev user on first run:
 - **Mobile (Capacitor)**: things .NET can't reach from a webview process (camera, geolocation, accelerometer) are pushed to the API from the Vue layer. `POST /api/hardware/sensors/mobile` accepts a `MobileSensorReading` (motion / orientation / environment / location / health / biometric / connectivity / UI groups — see `src/rAspCoreVueLauncher.Shared/Hardware/HardwareSensors.cs`) and the latest reading is echoed back under the `mobile` field on `GET /api/hardware/sensors`.
 - A drop-in module at [`src/rAspCoreVueLauncher.Web/src/lib/sensorsBridge.ts`](src/rAspCoreVueLauncher.Web/src/lib/sensorsBridge.ts) wires the standard Web Sensor APIs (DeviceMotion, DeviceOrientation, Geolocation, Battery, NetworkInformation) to that endpoint with zero dependencies. Call `startSensorBridge()` once at startup.
 
-## Desktop bundle (Tauri)
+## Packaging notes
 
-```pwsh
-cd src/rAspCoreVueLauncher.Web
-npm run tauri:dev      # dev with hot reload
-npm run tauri:build    # produces installers for the current OS
-```
-
-To ship the API alongside the desktop binary, publish a self-contained build and reference it as a Tauri `externalBin` sidecar in `src-tauri/tauri.conf.json`. (TODO — not wired in this template.)
-
-## Mobile bundle (Capacitor)
-
-iOS and Android platforms aren't checked in — generate them on demand:
-
-```pwsh
-cd src/rAspCoreVueLauncher.Web
-npm run build                       # produce dist/
-npx cap add android                 # one-time; creates android/ folder
-npx cap add ios                     # one-time; macOS + Xcode required
-npm run cap:sync                    # copy dist/ into native projects
-npm run cap:android                 # open Android Studio / run on device
-npm run cap:ios                     # open Xcode / run on simulator
-```
-
-For mobile, the Vue app is served from the device — it must talk to a remote ASP.NET API rather than localhost. Configure the API base URL via Vite env vars before building.
+- Desktop bundles are produced by `npm run package:desktop` (Tauri 2). To ship the API alongside the desktop binary, publish a self-contained build and reference it as a Tauri `externalBin` sidecar in `src-tauri/tauri.conf.json`. (TODO — not wired in this template.)
+- Android and iOS native platform folders aren't checked in. `npm run package:android` runs `npx cap add android` on demand before invoking Gradle. For mobile, the Vue app is served from the device — it must talk to a remote ASP.NET API rather than localhost. Configure the API base URL via Vite env vars before building.
 
 ## What's not here yet
 
