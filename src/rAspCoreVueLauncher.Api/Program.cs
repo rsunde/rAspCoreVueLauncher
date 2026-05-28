@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using System.Text;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -55,7 +56,12 @@ builder.Services
 builder.Services.AddAuthorization();
 
 builder.Services.AddSingleton<IMobileSensorCache, MobileSensorCache>();
-builder.Services.AddSingleton<IBatteryReader, NullBatteryReader>();
+if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+    builder.Services.AddSingleton<IBatteryReader, WindowsBatteryReader>();
+else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+    builder.Services.AddSingleton<IBatteryReader, LinuxBatteryReader>();
+else
+    builder.Services.AddSingleton<IBatteryReader, NullBatteryReader>();
 builder.Services.AddSingleton<IHardwareService, HardwareService>();
 
 builder.Services.AddOpenApi();
