@@ -29,7 +29,7 @@ public sealed class WindowsBatteryReader : IBatteryReader
 
         return Task.FromResult<BatterySnapshot?>(new BatterySnapshot(
             PercentRemaining: s.BatteryLifePercent,
-            IsCharging: s.ACLineStatus == 1,
+            IsCharging: (s.BatteryFlag & 0x08) != 0,
             EstimatedRuntime: null));
     }
 }

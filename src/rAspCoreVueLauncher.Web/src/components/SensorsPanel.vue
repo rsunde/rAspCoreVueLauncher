@@ -129,7 +129,7 @@ const mobileBlocks = computed(() => {
             <span v-if="sensors.battery.isCharging" class="text-sm text-muted-foreground">(charging)</span>
           </div>
         </div>
-        <div v-else class="text-xs text-muted-foreground italic">Battery: not implemented for this platform yet</div>
+        <div v-else class="text-xs text-muted-foreground italic">No battery detected</div>
       </div>
     </div>
 
