@@ -31,7 +31,7 @@ public static class HardwareEndpoints
             cache.Store(reading);
             return Results.Accepted();
         })
-            .WithName("IngestMobileSensors");
+            .WithName(MobileSensorExampleTransformer.EndpointName);
 
         return app;
     }

@@ -1,59 +1,24 @@
 using System.Runtime.InteropServices;
-using System.Text;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
-using rAspCoreVueLauncher.Api.Auth;
-using rAspCoreVueLauncher.Api.Data;
 using rAspCoreVueLauncher.Api.Hardware;
+using rAspCoreVueLauncher.Api.Json;
 using rAspCoreVueLauncher.Shared.Hardware;
 
 var builder = WebApplication.CreateBuilder(args);
 
 const string VueDevCors = "VueDev";
 builder.Services.AddCors(o => o.AddPolicy(VueDevCors, p => p
-    .WithOrigins("http://localhost:5173", "http://localhost:4173", "tauri://localhost", "https://tauri.localhost")
+    // Accept any localhost origin so each cloned Vue app can pick its own port
+    // (5173, 5174, ...) without the API needing to know about it. Tauri origins
+    // are listed explicitly since they aren't `http://localhost`.
+    .SetIsOriginAllowed(origin =>
+        origin is "tauri://localhost" or "https://tauri.localhost"
+        || (Uri.TryCreate(origin, UriKind.Absolute, out var u)
+            && u.Host == "localhost"
+            && (u.Scheme == "http" || u.Scheme == "https")))
     .AllowAnyHeader()
     .AllowAnyMethod()
     .AllowCredentials()));
-
-builder.Services.AddDbContext<AppDbContext>(opts =>
-    opts.UseSqlite(builder.Configuration.GetConnectionString("Default") ?? "Data Source=app.db"));
-
-builder.Services
-    .AddIdentityCore<AppUser>(o =>
-    {
-        o.Password.RequireNonAlphanumeric = true;
-        o.Password.RequiredLength = 8;
-        o.User.RequireUniqueEmail = true;
-    })
-    .AddRoles<IdentityRole>()
-    .AddEntityFrameworkStores<AppDbContext>()
-    .AddSignInManager();
-
-builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection(JwtOptions.SectionName));
-builder.Services.AddSingleton<JwtTokenService>();
-
-var jwt = builder.Configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>() ?? new JwtOptions();
-builder.Services
-    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(o =>
-    {
-        o.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = jwt.Issuer,
-            ValidAudience = jwt.Audience,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt.SigningKey)),
-            ClockSkew = TimeSpan.FromSeconds(30),
-        };
-    });
-builder.Services.AddAuthorization();
 
 builder.Services.AddSingleton<IMobileSensorCache, MobileSensorCache>();
 if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
@@ -64,13 +29,15 @@ else
     builder.Services.AddSingleton<IBatteryReader, NullBatteryReader>();
 builder.Services.AddSingleton<IHardwareService, HardwareService>();
 
-builder.Services.AddOpenApi();
+builder.Services.ConfigureHttpJsonOptions(o =>
+    o.SerializerOptions.Converters.Add(new LenientDateTimeOffsetConverter()));
+
+builder.Services.AddOpenApi(o =>
+    o.AddOperationTransformer<MobileSensorExampleTransformer>());
 
 var app = builder.Build();
 
 app.UseCors(VueDevCors);
-app.UseAuthentication();
-app.UseAuthorization();
 
 if (app.Environment.IsDevelopment())
 {
@@ -79,11 +46,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.MapHardwareEndpoints();
-app.MapAuthEndpoints();
 
 app.MapGet("/", () => Results.Redirect("/scalar/v1"));
-
-await DatabaseSeeder.EnsureSeededAsync(app.Services);
 
 app.Run();
 

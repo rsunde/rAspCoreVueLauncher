@@ -12,7 +12,9 @@ export default defineConfig({
     },
   },
   server: {
-    port: 5173,
+    // Per-clone override: set PORT=<n> in .env.local or your shell.
+    // Keep src-tauri/tauri.conf.json:devUrl in sync if you change this default.
+    port: Number(process.env.PORT) || 5174,
     strictPort: true,
     proxy: {
       '/api': {

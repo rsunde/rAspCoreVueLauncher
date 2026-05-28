@@ -2,6 +2,13 @@
 
 Feature-level history of `rAspCoreVueLauncher`, newest first. Grouped by commit; not a literal git log. For the current state, see [`HANDOVER.md`](HANDOVER.md). For what's coming, see [`ROADMAP.md`](ROADMAP.md).
 
+## 2026-05-28 — Reframed as the Launcher; auth/EF Core stripped
+
+- **Architectural pivot.** This repo is now positioned as the **Launcher** — a device-side template that exposes hardware/mobile sensors to whichever Vue app gets dropped into `src/rAspCoreVueLauncher.Web/`. Each Vue app keeps its own per-app API (auth, business data, persistence) in its own repo. `README.md` gained an "Architecture & terminology" section with a mermaid diagram and glossary.
+- **Removed scaffolding from `rAspCoreVueLauncher.Api`:** deleted `Auth/`, `Data/`, `Migrations/`, the SQLite files, and the `dev@example.com` seed. Dropped NuGet refs to `Microsoft.AspNetCore.Authentication.JwtBearer`, `Microsoft.AspNetCore.Identity.EntityFrameworkCore`, `Microsoft.EntityFrameworkCore.Sqlite`, and `Microsoft.EntityFrameworkCore.Tools`. `Program.cs` is now ~50 lines: CORS, hardware DI, OpenAPI, endpoints. `appsettings*.json` lost the `Jwt` and `ConnectionStrings` sections. `TestAppFactory` lost its `AppDbContext` substitution. 13/13 tests still pass.
+- **Scalar "Try it" works out of the box.** `MobileSensorExampleTransformer` attaches a valid request example to the `IngestMobileSensors` OpenAPI operation so the auto-generated payload deserialises cleanly. `LenientDateTimeOffsetConverter` accepts ISO strings with or without a timezone offset (and Unix epoch numbers) as defence-in-depth for hand-rolled clients.
+- **Per-clone port story.** Vite default bumped to **5174** and made env-overridable (`PORT=<n>` in `.env.local`), `tauri.conf.json` `devUrl` synced. API CORS predicate now accepts any `http(s)://localhost:*` origin so future clones can pick their own port without touching the API.
+
 ## 2026-05-27 — ROADMAP backlog sprint
 
 - **Tauri sidecar wiring** — `lib.rs` spawns the ASP.NET API as a `tauri-plugin-shell` sidecar in release builds (`!cfg!(debug_assertions)`); kills it on window destroy. `tauri.conf.json` declares `externalBin`. `package-desktop.mjs` publishes a self-contained single-file binary (`dotnet publish -r <rid> --self-contained -p:PublishSingleFile=true`) and copies it to `src-tauri/binaries/rAspCoreVueLauncher-api-{triple}{ext}` before the Tauri bundle step. `VITE_API_BASE_URL=http://127.0.0.1:5148` is set for the production Vite build.

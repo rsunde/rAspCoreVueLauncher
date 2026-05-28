@@ -1,8 +1,6 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using rAspCoreVueLauncher.Api.Data;
 using rAspCoreVueLauncher.Api.Hardware;
 using rAspCoreVueLauncher.Shared.Hardware;
 
@@ -18,11 +16,6 @@ public sealed class TestAppFactory : WebApplicationFactory<Program>
         builder.UseEnvironment("Development");
         builder.ConfigureServices(services =>
         {
-            var dbDescriptor = services.SingleOrDefault(d => d.ServiceType == typeof(DbContextOptions<AppDbContext>));
-            if (dbDescriptor is not null) services.Remove(dbDescriptor);
-            services.AddDbContext<AppDbContext>(o =>
-                o.UseSqlite($"Data Source=file:test-{Guid.NewGuid():N}?mode=memory&cache=shared"));
-
             if (HardwareSubstitute is not null)
             {
                 var hwDescriptor = services.SingleOrDefault(d => d.ServiceType == typeof(IHardwareService));

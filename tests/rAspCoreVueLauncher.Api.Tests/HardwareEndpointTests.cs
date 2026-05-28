@@ -1,5 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Text;
+using System.Text.Json.Nodes;
 using FluentAssertions;
 using NSubstitute;
 using rAspCoreVueLauncher.Api.Hardware;
@@ -97,6 +99,60 @@ public sealed class HardwareEndpointTests
         var device = sensors.MobileDevices[0];
         device.ClientId.Should().Be("test-phone");
         device.Motion!.Accelerometer.Should().Be(new Vector3(0.1, 0.2, 9.8));
+    }
+
+    [TestMethod]
+    [DataRow("\"2026-05-28T10:00:00\"", DisplayName = "ISO 8601 without offset")]
+    [DataRow("\"2026-05-28T10:00:00Z\"", DisplayName = "ISO 8601 with Z offset")]
+    [DataRow("1748426400", DisplayName = "Unix seconds")]
+    [DataRow("1748426400000", DisplayName = "Unix milliseconds")]
+    public async Task PostMobileSensors_AcceptsLenientCapturedAtFormats(string capturedAtJson)
+    {
+        // Scalar's "Try it" generator may emit a DateTime without an offset OR a
+        // numeric epoch. The endpoint must accept either and treat as UTC.
+        await using var factory = new TestAppFactory();
+        var client = factory.CreateClient();
+
+        var body = $$"""
+            {
+              "clientId": "scalar-test",
+              "capturedAtUtc": {{capturedAtJson}},
+              "device": null, "motion": null, "orientation": null,
+              "environment": null, "location": null, "health": null,
+              "biometric": null, "connectivity": null, "userInterface": null
+            }
+            """;
+
+        var post = await client.PostAsync(
+            "/api/hardware/sensors/mobile",
+            new StringContent(body, Encoding.UTF8, "application/json"));
+        post.StatusCode.Should().Be(HttpStatusCode.Accepted);
+
+        var sensors = await client.GetFromJsonAsync<HardwareSensors>("/api/hardware/sensors");
+        var device = sensors!.MobileDevices.Should().ContainSingle().Subject;
+        device.ClientId.Should().Be("scalar-test");
+        device.CapturedAtUtc.Offset.Should().Be(TimeSpan.Zero);
+    }
+
+    [TestMethod]
+    public async Task IngestMobileSensors_OpenApiDoc_HasWorkingRequestExample()
+    {
+        // The whole point of attaching an example: Scalar uses it as the default
+        // "Try it" body. If it disappears, Scalar regresses to a payload that
+        // doesn't deserialise. Sanity-check both the doc and the example itself.
+        await using var factory = new TestAppFactory();
+        var client = factory.CreateClient();
+
+        var doc = await client.GetFromJsonAsync<JsonNode>("/openapi/v1.json");
+        var media = doc!["paths"]!["/api/hardware/sensors/mobile"]!["post"]!
+            ["requestBody"]!["content"]!["application/json"]!;
+        var example = media["example"];
+        example.Should().NotBeNull("Scalar relies on the example to seed a valid Try-it body");
+
+        var post = await client.PostAsync(
+            "/api/hardware/sensors/mobile",
+            new StringContent(example!.ToJsonString(), Encoding.UTF8, "application/json"));
+        post.StatusCode.Should().Be(HttpStatusCode.Accepted);
     }
 
     [TestMethod]

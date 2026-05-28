@@ -12,16 +12,16 @@ The repo is intentionally a base to fork from. The bundled Vue app is a placehol
 
 ### API — `src/rAspCoreVueLauncher.Api/`
 
-ASP.NET Core 10 minimal API with EF Core + SQLite, Identity, JWT bearer auth, and Scalar docs at `/scalar/v1`.
+ASP.NET Core 10 minimal API exposing the **Launcher API** — hardware/sensor endpoints only. Scalar docs at `/scalar/v1`. No auth, no DB; per-app concerns (auth, business data) belong in the Vue app's own backend.
 
 | Concern | Where |
 |---------|-------|
-| Composition | `Program.cs` (DI, CORS `VueDevCors`, auth, endpoint registration) |
-| Auth endpoints | `Auth/AuthEndpoints.cs` — `POST /api/auth/login`, `GET /api/auth/me` |
+| Composition | `Program.cs` (DI, CORS `VueDevCors`, endpoint registration) |
 | Hardware endpoints | `Hardware/HardwareEndpoints.cs` — `GET /api/hardware/info`, `GET /api/hardware/sensors`, `POST /api/hardware/sensors/mobile` |
 | `IHardwareService` impl | `Hardware/HardwareService.cs` — `GC.GetGCMemoryInfo()`, `DriveInfo`, `NetworkInterface` |
 | Mobile sensor cache | `Hardware/MobileSensorCache.cs` — singleton, latest-wins |
-| Seeded dev user | `dev@example.com / Dev!2345` (first run) |
+| OpenAPI request example | `Hardware/MobileSensorExampleTransformer.cs` — seeds Scalar's "Try it" body |
+| Lenient JSON `DateTimeOffset` | `Json/LenientDateTimeOffsetConverter.cs` — accepts ISO strings with/without offset and Unix epoch numbers |
 
 ### Shared — `src/rAspCoreVueLauncher.Shared/`
 
@@ -49,7 +49,7 @@ Config only. Native `android/` and `ios/` folders are intentionally **not** comm
 
 ### Tests — `tests/rAspCoreVueLauncher.Api.Tests/`
 
-MSTest + NSubstitute + FluentAssertions v6 + `WebApplicationFactory`. **6 tests**, all passing on Windows. Each test builds a fresh `TestAppFactory`, so cache isolation works today.
+MSTest + NSubstitute + FluentAssertions v6 + `WebApplicationFactory`. **13 tests**, all passing on Windows. Each test builds a fresh `TestAppFactory`, so cache isolation works today.
 
 ### Setup scripts — `scripts/setup.ps1`, `scripts/setup.sh`
 
@@ -102,7 +102,7 @@ What was actually exercised on the dev host (Windows 11) vs. what was written bu
 | Action | Status |
 |--------|--------|
 | `dotnet build` | VERIFIED — succeeds |
-| `dotnet test` | VERIFIED — 6/6 passing (run before a VS debug session held a file lock) |
+| `dotnet test` | VERIFIED — 13/13 passing |
 | `scripts/setup.ps1` end-to-end | VERIFIED — flags missing tools correctly on Windows |
 | TypeScript type-check (`tsc --noEmit` via Vite) | VERIFIED — passes |
 | Wizard imports resolve | VERIFIED |
@@ -126,7 +126,6 @@ Design choices that look like bugs but are intentional. Read these before "fixin
 - **`sensorsBridge.ts` does NOT fill `health` or `biometric` blocks.** Those DTOs exist server-side, but populating them needs Capacitor plugins (HealthKit / Google Fit / `LocalAuthentication`). The bundled bridge is web-API-only.
 - **`BatterySnapshot` is hardcoded to `null` server-side.** No cross-platform .NET Battery API; would need WMI on Windows / `/sys/class/power_supply` on Linux. See [`ROADMAP.md`](ROADMAP.md).
 - **`HardwareService.GetSensorsAsync` uses `GC.GetGCMemoryInfo()`.** The "total available memory" number reflects GC limits, not OS RAM. Acceptable for the demo; swap to a platform-specific call if you need true host RAM.
-- **EF Core uses `EnsureCreated`, not migrations.** Fine for the template; replace with `dotnet ef migrations` + `MigrateAsync` once the schema starts to move.
 
 ## Repo tour
 
@@ -159,12 +158,12 @@ rAspCoreVueLauncher/
 ├── src/
 │   ├── rAspCoreVueLauncher.Shared/
 │   │   └── Hardware/HardwareSensors.cs      # DTO graph (mobile + server snapshots)
-│   ├── rAspCoreVueLauncher.Api/
-│   │   ├── Program.cs                       # DI, CORS, auth, endpoint wiring
-│   │   ├── Auth/AuthEndpoints.cs            # /api/auth/login, /api/auth/me
+│   ├── rAspCoreVueLauncher.Api/            # The Launcher API — hardware only
+│   │   ├── Program.cs                       # DI, CORS, endpoint wiring
 │   │   ├── Hardware/HardwareEndpoints.cs    # /api/hardware/{info,sensors,sensors/mobile}
 │   │   ├── Hardware/HardwareService.cs      # IHardwareService impl
-│   │   └── Hardware/MobileSensorCache.cs    # Singleton, latest-wins
+│   │   ├── Hardware/MobileSensorCache.cs    # Singleton, latest-wins
+│   │   └── Json/LenientDateTimeOffsetConverter.cs
 │   └── rAspCoreVueLauncher.Web/
 │       ├── src/
 │       │   ├── main.ts                      # Vue entry (startSensorBridge NOT wired yet)
@@ -175,7 +174,7 @@ rAspCoreVueLauncher/
 │       ├── capacitor.config.ts              # Mobile config (no native folders committed)
 │       └── src-tauri/                       # Tauri 2 desktop shell
 └── tests/
-    └── rAspCoreVueLauncher.Api.Tests/       # 6 MSTest tests, all passing
+    └── rAspCoreVueLauncher.Api.Tests/       # 13 MSTest tests, all passing
 ```
 
 ## How to pick this up

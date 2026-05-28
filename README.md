@@ -1,15 +1,54 @@
 # rAspCoreVueLauncher
 
-A runnable template for cross-platform apps built on ASP.NET Core 10 + Vue 3, wrapped with **Tauri** for desktop and **Capacitor** for mobile. Vue is the single UI; the ASP.NET API exposes a `IHardwareService` abstraction so the same web frontend can reach native sensors from any wrapper.
+A device-side **Launcher** that gives any Vue app first-class access to mobile hardware sensors (motion, orientation, location, battery, connectivity). Drop your existing Vue app in, add one import, and the readings start flowing — no Rust, no Capacitor plugin authoring.
 
-This repo is a living base — clone it, rename it, build the next app.
+This repo is the **Launcher** — it is **not** your app's backend. Each Vue app you build still has its own API for auth, business data, and persistence; that lives in your app's own repo and is unrelated to anything here.
+
+## Architecture & terminology
+
+```mermaid
+flowchart LR
+    subgraph LaunchedDevice ["Device running your launched app"]
+        Sensors[("Phone sensors<br/>motion · orientation · location · battery")]
+        Vue["Vue app<br/>your code, dropped into this template"]
+        Launcher["Launcher API<br/>(rAspCoreVueLauncher.Api)<br/>/api/hardware/*"]
+        Sensors -- "Web Sensor APIs" --> Vue
+        Vue -- "POST /api/hardware/sensors/mobile" --> Launcher
+        Vue -- "GET /api/hardware/sensors" --> Launcher
+    end
+
+    subgraph Remote ["Your Vue app's own backend (different repo, different ports)"]
+        AppAPI["Per-app API + DB<br/>auth · business data"]
+    end
+
+    Vue -- "all business / auth calls" --> AppAPI
+```
+
+| Term | What it is | Lives where |
+|------|------------|-------------|
+| **Vue app** | Your UI code. Owns business logic. | Your own repo. Gets dropped into `src/rAspCoreVueLauncher.Web/` in this template when you want sensor access. |
+| **Per-app API** | The Vue app's own backend — auth, persistence, business endpoints. | Your own repo. Independent of this template. |
+| **Launcher** | This whole template: the ASP.NET hardware service + the Tauri/Capacitor wrappers that bundle it with a Vue app on a device. | This repo. |
+| **Launcher API** | The hardware-exposing ASP.NET service inside the Launcher. Talks to the Vue app over HTTP on the local device only. | `src/rAspCoreVueLauncher.Api/` |
+| **`sensorsBridge.ts`** | One-line drop-in that wires browser Web Sensor APIs to the Launcher API. | `src/rAspCoreVueLauncher.Web/src/lib/sensorsBridge.ts` |
+
+### Ports
+
+| Service | Default port | How to change |
+|---------|--------------|---------------|
+| Vue dev server | `5174` | `PORT=<n>` in `.env.local` under `src/rAspCoreVueLauncher.Web/`. Increment by 1 per cloned app. |
+| Launcher API (http) | `5148` | `applicationUrl` in `src/rAspCoreVueLauncher.Api/Properties/launchSettings.json`. |
+| Launcher API (https) | `7102` | Same file. |
+| Per-app API | whatever your app uses | Not in this repo. |
+
+The Launcher API's dev CORS policy accepts any `http(s)://localhost:*` origin, so your Vue app can run on whatever port the clone needs without an API change.
 
 ## Stack
 
 | Layer | Technology | Purpose |
 |-------|-----------|---------|
-| Backend | ASP.NET Core 10 Minimal API + EF Core + SQLite + JWT + Identity | REST API, auth, persistence |
-| Shared | .NET 10 class library | DTOs, contracts, seed data |
+| Backend | ASP.NET Core 10 Minimal API | Launcher API (hardware/sensors only) |
+| Shared | .NET 10 class library | Hardware DTOs / wire contracts |
 | Frontend | Vue 3 + Vite + TS + Tailwind v4 + shadcn-vue + Pinia + Vue Router | The UI |
 | Desktop shell | Tauri 2 | Native window + hardware bridge |
 | Mobile shell | Capacitor 7+ | iOS / Android packaging |
@@ -99,16 +138,6 @@ npm run dev
 The bundled Vue project is a placeholder. If you already have a Vue 3 app, you can graft it onto this shell and reuse the ASP.NET API, the Tauri desktop wrapper, the Capacitor mobile wrapper, and the mobile-sensor ingest pipeline. Two paths are supported: replace the bundled Vue app with yours, or migrate the API + native shells into your repo. Mobile sensor reporting is one import and one call in `main.ts` — drop in `src/rAspCoreVueLauncher.Web/src/lib/sensorsBridge.ts` and call `startSensorBridge()`.
 
 See [`docs/BYO-APP.md`](docs/BYO-APP.md) for the full guide, options reference, iOS permission gotcha, Capacitor permissions checklist, and troubleshooting.
-
-## Auth
-
-The API seeds a single dev user on first run:
-
-| Email              | Password   |
-|--------------------|------------|
-| `dev@example.com`  | `Dev!2345` |
-
-`POST /api/auth/login` returns a JWT bearer token. `GET /api/auth/me` requires it. The signing key in `appsettings.Development.json` is for local dev only — production must override `Jwt:SigningKey` via environment variable or secret store.
 
 ## Hardware abstraction
 

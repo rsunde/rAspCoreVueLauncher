@@ -6,12 +6,13 @@ This template is a runnable shell for cross-platform apps: an ASP.NET Core API, 
 
 | Concern | Plain Vue | This repo |
 |---------|-----------|-----------|
-| HTTP backend | none | ASP.NET Core 10 minimal API (`rAspCoreVueLauncher.Api`) |
-| Auth | none | JWT + EF Core Identity, dev user seeded |
+| Launcher API (hardware only) | none | ASP.NET Core 10 minimal API (`rAspCoreVueLauncher.Api`) — `/api/hardware/*` |
 | Desktop packaging | none | Tauri 2 (`src-tauri/`) |
 | Mobile packaging | none | Capacitor 7+ (`capacitor.config.ts`) |
 | Mobile sensor ingest | none | `POST /api/hardware/sensors/mobile` + drop-in `sensorsBridge.ts` |
 | Shared DTOs | none | `rAspCoreVueLauncher.Shared` class library |
+
+> The Launcher API is hardware-only by design. Your Vue app's own backend (auth, business data, persistence) is **separate** — it lives in your app's repo and uses its own ports. See the architecture diagram in [`README.md`](../README.md#architecture--terminology).
 
 The contract is one-way: the Vue app talks to the API over HTTP. Tauri and Capacitor just package the Vue app. You don't need to learn Rust or write Capacitor plugins for the bundled sensor pipeline.
 
@@ -359,8 +360,6 @@ You don't have to write any of these — they're already wired up in `src/rAspCo
 
 | Method | Path | Purpose |
 |--------|------|---------|
-| `POST` | `/api/auth/login` | Returns a JWT bearer token. |
-| `GET` | `/api/auth/me` | Returns the current user — requires `Authorization: Bearer <jwt>`. |
 | `GET` | `/api/hardware/info` | Static device facts: OS, cores, machine name. |
 | `GET` | `/api/hardware/sensors` | Server-side sensors plus the latest `MobileSensorReading` echoed back. |
 | `POST` | `/api/hardware/sensors/mobile` | Ingests a `MobileSensorReading` from the client. |
