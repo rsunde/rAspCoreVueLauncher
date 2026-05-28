@@ -125,6 +125,17 @@ public sealed class HardwareEndpointTests
     }
 
     [TestMethod]
+    public async Task GetSensors_Battery_NullBatteryReader_ReturnsNullBattery()
+    {
+        // NullBatteryReader is registered by default in tests — battery should be null
+        await using var factory = new TestAppFactory();
+        var client = factory.CreateClient();
+
+        var sensors = await client.GetFromJsonAsync<HardwareSensors>("/api/hardware/sensors");
+        sensors!.Battery.Should().BeNull();
+    }
+
+    [TestMethod]
     public async Task GetSensors_Battery_WhenReaderReturnsBattery_IncludedInResponse()
     {
         var fake = Substitute.For<IBatteryReader>();
