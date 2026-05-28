@@ -12,10 +12,12 @@ public sealed class HardwareService : IHardwareService
     private DateTime _lastCpuSampleAt = DateTime.UtcNow;
     private TimeSpan _lastTotalCpu = Process.GetCurrentProcess().TotalProcessorTime;
     private readonly IMobileSensorCache _mobileCache;
+    private readonly IBatteryReader _batteryReader;
 
-    public HardwareService(IMobileSensorCache mobileCache)
+    public HardwareService(IMobileSensorCache mobileCache, IBatteryReader batteryReader)
     {
         _mobileCache = mobileCache;
+        _batteryReader = batteryReader;
     }
 
     public Task<HardwareInfo> GetInfoAsync(CancellationToken cancellationToken = default)
@@ -34,12 +36,12 @@ public sealed class HardwareService : IHardwareService
         return Task.FromResult(info);
     }
 
-    public Task<HardwareSensors> GetSensorsAsync(CancellationToken cancellationToken = default)
+    public async Task<HardwareSensors> GetSensorsAsync(CancellationToken cancellationToken = default)
     {
         var process = Process.GetCurrentProcess();
         var gcInfo = GC.GetGCMemoryInfo();
 
-        var sensors = new HardwareSensors(
+        return new HardwareSensors(
             ServerTimeUtc: DateTimeOffset.UtcNow,
             ProcessUptime: DateTime.UtcNow - process.StartTime.ToUniversalTime(),
             Cpu: new CpuSnapshot(Environment.ProcessorCount, SampleProcessCpuPercent(process)),
@@ -48,10 +50,8 @@ public sealed class HardwareService : IHardwareService
                 TotalAvailableMb: gcInfo.TotalAvailableMemoryBytes / (1024 * 1024)),
             Disks: ReadDisks(),
             Networks: ReadNetworks(),
-            Battery: null,
+            Battery: await _batteryReader.ReadAsync(),
             Mobile: _mobileCache.GetLatest());
-
-        return Task.FromResult(sensors);
     }
 
     private double SampleProcessCpuPercent(Process process)
@@ -88,10 +88,7 @@ public sealed class HardwareService : IHardwareService
                     TotalMb: d.TotalSize / (1024 * 1024),
                     FreeMb: d.AvailableFreeSpace / (1024 * 1024)));
             }
-            catch
-            {
-                // some pseudo-fs entries on linux throw; skip them
-            }
+            catch { }
         }
         return result;
     }

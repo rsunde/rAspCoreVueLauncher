@@ -55,6 +55,7 @@ builder.Services
 builder.Services.AddAuthorization();
 
 builder.Services.AddSingleton<IMobileSensorCache, MobileSensorCache>();
+builder.Services.AddSingleton<IBatteryReader, NullBatteryReader>();
 builder.Services.AddSingleton<IHardwareService, HardwareService>();
 
 builder.Services.AddOpenApi();

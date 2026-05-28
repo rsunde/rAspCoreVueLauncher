@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using FluentAssertions;
 using NSubstitute;
+using rAspCoreVueLauncher.Api.Hardware;
 using rAspCoreVueLauncher.Api.Tests.Infrastructure;
 using rAspCoreVueLauncher.Shared.Hardware;
 
@@ -121,6 +122,21 @@ public sealed class HardwareEndpointTests
 
         var problem = await response.Content.ReadAsStringAsync();
         problem.Should().Contain("clientId");
+    }
+
+    [TestMethod]
+    public async Task GetSensors_Battery_WhenReaderReturnsBattery_IncludedInResponse()
+    {
+        var fake = Substitute.For<IBatteryReader>();
+        fake.ReadAsync().Returns(new BatterySnapshot(72, false, null));
+
+        await using var factory = new TestAppFactory { BatteryReaderSubstitute = fake };
+        var client = factory.CreateClient();
+
+        var sensors = await client.GetFromJsonAsync<HardwareSensors>("/api/hardware/sensors");
+        sensors!.Battery.Should().NotBeNull();
+        sensors.Battery!.PercentRemaining.Should().Be(72);
+        sensors.Battery.IsCharging.Should().BeFalse();
     }
 
     [TestMethod]
