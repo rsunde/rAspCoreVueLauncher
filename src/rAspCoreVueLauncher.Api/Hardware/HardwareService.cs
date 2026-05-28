@@ -88,7 +88,7 @@ public sealed class HardwareService : IHardwareService
                     TotalMb: d.TotalSize / (1024 * 1024),
                     FreeMb: d.AvailableFreeSpace / (1024 * 1024)));
             }
-            catch { }
+            catch { /* some pseudo-fs entries on Linux throw; skip them */ }
         }
         return result;
     }
