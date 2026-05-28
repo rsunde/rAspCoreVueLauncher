@@ -50,7 +50,7 @@ export interface HardwareSensors {
   disks: DiskSnapshot[]
   networks: NetworkInterfaceSnapshot[]
   battery: BatterySnapshot | null
-  mobile: MobileSensorReading | null
+  mobileDevices: MobileSensorReading[]
 }
 
 export interface Vector3 {

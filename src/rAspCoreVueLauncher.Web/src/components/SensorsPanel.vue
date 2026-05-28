@@ -68,19 +68,21 @@ function entries(obj: Record<string, unknown> | null | undefined) {
 }
 
 const mobileBlocks = computed(() => {
-  const m = props.sensors?.mobile
-  if (!m) return []
-  return [
-    { title: 'Device', data: m.device },
-    { title: 'Motion', data: m.motion },
-    { title: 'Orientation', data: m.orientation },
-    { title: 'Environment', data: m.environment },
-    { title: 'Location', data: m.location },
-    { title: 'Health', data: m.health },
-    { title: 'Biometric', data: m.biometric },
-    { title: 'Connectivity', data: m.connectivity },
-    { title: 'UserInterface', data: m.userInterface },
-  ].filter(b => b.data && entries(b.data as Record<string, unknown>).length > 0)
+  return (props.sensors?.mobileDevices ?? []).map(m => ({
+    clientId: m.clientId,
+    capturedAtUtc: m.capturedAtUtc,
+    blocks: [
+      { title: 'Device', data: m.device },
+      { title: 'Motion', data: m.motion },
+      { title: 'Orientation', data: m.orientation },
+      { title: 'Environment', data: m.environment },
+      { title: 'Location', data: m.location },
+      { title: 'Health', data: m.health },
+      { title: 'Biometric', data: m.biometric },
+      { title: 'Connectivity', data: m.connectivity },
+      { title: 'UserInterface', data: m.userInterface },
+    ].filter(b => b.data && entries(b.data as Record<string, unknown>).length > 0),
+  }))
 })
 </script>
 
@@ -168,15 +170,17 @@ const mobileBlocks = computed(() => {
     </div>
 
     <!-- Mobile sensors -->
-    <div v-if="sensors.mobile" class="rounded-lg border bg-card p-4 text-card-foreground shadow-sm">
+    <div v-for="device in mobileBlocks" :key="device.clientId"
+      class="rounded-lg border bg-card p-4 text-card-foreground shadow-sm">
       <div class="mb-3 flex items-baseline justify-between gap-2">
         <h3 class="text-sm font-medium">Mobile sensors</h3>
         <span class="font-mono text-xs text-muted-foreground tabular-nums">
-          {{ sensors.mobile.clientId }} · {{ fmtRelative(sensors.mobile.capturedAtUtc) }}
+          {{ device.clientId }} · {{ fmtRelative(device.capturedAtUtc) }}
         </span>
       </div>
       <div class="grid gap-3 sm:grid-cols-2">
-        <div v-for="b in mobileBlocks" :key="b.title" class="rounded-lg border bg-card p-3 text-card-foreground shadow-sm">
+        <div v-for="b in device.blocks" :key="b.title"
+          class="rounded-lg border bg-card p-3 text-card-foreground shadow-sm">
           <h4 class="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">{{ b.title }}</h4>
           <dl class="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs">
             <template v-for="[k, v] in entries(b.data as Record<string, unknown>)" :key="k">
