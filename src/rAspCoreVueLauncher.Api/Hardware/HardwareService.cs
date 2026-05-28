@@ -51,7 +51,7 @@ public sealed class HardwareService : IHardwareService
             Disks: ReadDisks(),
             Networks: ReadNetworks(),
             Battery: await _batteryReader.ReadAsync(),
-            Mobile: _mobileCache.GetLatest());
+            MobileDevices: _mobileCache.GetAll());
     }
 
     private double SampleProcessCpuPercent(Process process)

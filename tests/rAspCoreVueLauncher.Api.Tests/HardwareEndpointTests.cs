@@ -93,9 +93,10 @@ public sealed class HardwareEndpointTests
         post.StatusCode.Should().Be(HttpStatusCode.Accepted);
 
         var sensors = await client.GetFromJsonAsync<HardwareSensors>("/api/hardware/sensors");
-        sensors!.Mobile.Should().NotBeNull();
-        sensors.Mobile!.ClientId.Should().Be("test-phone");
-        sensors.Mobile.Motion!.Accelerometer.Should().Be(new Vector3(0.1, 0.2, 9.8));
+        sensors!.MobileDevices.Should().HaveCount(1);
+        var device = sensors.MobileDevices[0];
+        device.ClientId.Should().Be("test-phone");
+        device.Motion!.Accelerometer.Should().Be(new Vector3(0.1, 0.2, 9.8));
     }
 
     [TestMethod]
@@ -151,14 +152,14 @@ public sealed class HardwareEndpointTests
     }
 
     [TestMethod]
-    public async Task PostMobileSensors_LatestReadingWinsOverOlder()
+    public async Task PostMobileSensors_MultipleDevices_AllReturnedInGetSensors()
     {
         await using var factory = new TestAppFactory();
         var client = factory.CreateClient();
 
-        var older = new MobileSensorReading(
+        var phoneA = new MobileSensorReading(
             ClientId: "phone-a",
-            CapturedAtUtc: DateTimeOffset.UtcNow.AddMinutes(-1),
+            CapturedAtUtc: DateTimeOffset.UtcNow,
             Device: null,
             Motion: new MotionSensors(
                 Accelerometer: new Vector3(1.0, 1.0, 1.0),
@@ -168,7 +169,7 @@ public sealed class HardwareEndpointTests
             Orientation: null, Environment: null, Location: null,
             Health: null, Biometric: null, Connectivity: null, UserInterface: null);
 
-        var newer = new MobileSensorReading(
+        var phoneB = new MobileSensorReading(
             ClientId: "phone-b",
             CapturedAtUtc: DateTimeOffset.UtcNow,
             Device: null,
@@ -180,14 +181,14 @@ public sealed class HardwareEndpointTests
             Orientation: null, Environment: null, Location: null,
             Health: null, Biometric: null, Connectivity: null, UserInterface: null);
 
-        (await client.PostAsJsonAsync("/api/hardware/sensors/mobile", older))
-            .StatusCode.Should().Be(HttpStatusCode.Accepted);
-        (await client.PostAsJsonAsync("/api/hardware/sensors/mobile", newer))
-            .StatusCode.Should().Be(HttpStatusCode.Accepted);
+        (await client.PostAsJsonAsync("/api/hardware/sensors/mobile", phoneA)).StatusCode
+            .Should().Be(HttpStatusCode.Accepted);
+        (await client.PostAsJsonAsync("/api/hardware/sensors/mobile", phoneB)).StatusCode
+            .Should().Be(HttpStatusCode.Accepted);
 
         var sensors = await client.GetFromJsonAsync<HardwareSensors>("/api/hardware/sensors");
-        sensors!.Mobile.Should().NotBeNull();
-        sensors.Mobile!.ClientId.Should().Be("phone-b");
-        sensors.Mobile.Motion!.Accelerometer.Should().Be(new Vector3(2.0, 2.0, 2.0));
+        sensors!.MobileDevices.Should().HaveCount(2);
+        sensors.MobileDevices.Should().Contain(d => d.ClientId == "phone-a");
+        sensors.MobileDevices.Should().Contain(d => d.ClientId == "phone-b");
     }
 }

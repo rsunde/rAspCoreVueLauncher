@@ -8,7 +8,7 @@ public record HardwareSensors(
     IReadOnlyList<DiskSnapshot> Disks,
     IReadOnlyList<NetworkInterfaceSnapshot> Networks,
     BatterySnapshot? Battery,
-    MobileSensorReading? Mobile);
+    IReadOnlyList<MobileSensorReading> MobileDevices);
 
 public record CpuSnapshot(
     int LogicalCores,
