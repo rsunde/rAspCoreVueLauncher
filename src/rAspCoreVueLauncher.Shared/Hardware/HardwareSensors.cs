@@ -40,7 +40,7 @@ public record BatterySnapshot(
 // Mobile sensors. Each block is nullable — clients only populate what their
 // platform exposes (Android, iOS, Tauri-on-mobile, browser Web Sensors API,
 // etc.). The server itself never fills these in; it receives them via
-// POST /api/hardware/sensors/mobile and echoes the latest reading back.
+// POST /api/hardware/sensors/mobile and echoes all active device readings back.
 // =======================================================================
 
 public record MobileSensorReading(
