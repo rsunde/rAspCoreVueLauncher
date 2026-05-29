@@ -18,7 +18,9 @@ const crumbs = computed(() => {
   const acc: { label: string; path: string }[] = []
   let cur = sep === '/' ? '' : ''
   for (const part of parts) {
-    cur = cur ? `${cur}${sep}${part}` : (sep === '/' ? `/${part}` : `${part}${sep}`)
+    cur = cur
+      ? (cur.endsWith(sep) ? `${cur}${part}` : `${cur}${sep}${part}`)
+      : (sep === '/' ? `/${part}` : `${part}${sep}`)
     acc.push({ label: part, path: cur })
   }
   return acc
@@ -85,11 +87,11 @@ async function confirmDelete() {
             <span class="font-mono text-xs tabular-nums text-muted-foreground">
               {{ entry.isDirectory ? '' : fmtSize(entry.size) }}
             </span>
-            <a
+            <button
               v-if="!entry.isDirectory"
-              :href="fs.downloadUrl(entry.path)"
               class="text-xs hover:underline"
-            >Download</a>
+              @click="fs.download(entry.path)"
+            >Download</button>
             <Button variant="ghost" size="sm" @click="askDelete(entry)">Delete</Button>
           </div>
         </li>

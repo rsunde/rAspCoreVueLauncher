@@ -48,11 +48,19 @@ export const useFilesystemStore = defineStore('filesystem', () => {
     return data
   }
 
-  // Builds a direct GET URL for the browser to download a file. When baseURL is
-  // unset (same-origin deployment) this falls back to a relative `/api/...` URL.
-  function downloadUrl(path: string): string {
-    const base = api.defaults.baseURL ?? ''
-    return `${base.replace(/\/$/, '')}/api/filesystem/download?path=${encodeURIComponent(path)}`
+  // Downloads a file through the axios instance (so the launcher token header is
+  // sent — a raw <a href> navigation cannot send custom headers), then triggers a
+  // browser save via a temporary object URL.
+  async function download(path: string) {
+    const res = await api.get('/api/filesystem/download', { params: { path }, responseType: 'blob' })
+    const url = URL.createObjectURL(res.data as Blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = path.split(/[\\/]/).pop() || 'download'
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+    URL.revokeObjectURL(url)
   }
 
   // Mutating actions: a failing POST rejects so the caller (component) can react;
@@ -87,6 +95,6 @@ export const useFilesystemStore = defineStore('filesystem', () => {
 
   return {
     currentPath, parent, entries, loading, error,
-    list, read, downloadUrl, write, mkdir, move, copy, remove,
+    list, read, download, write, mkdir, move, copy, remove,
   }
 })
