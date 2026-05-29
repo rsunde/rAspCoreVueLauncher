@@ -1,7 +1,7 @@
 # Filesystem File Manager — Design
 
 **Date:** 2026-05-29
-**Status:** Approved design (pre-implementation)
+**Status:** Implemented (see docs/superpowers/plans/2026-05-29-filesystem-file-manager.md)
 
 ## Goal
 
