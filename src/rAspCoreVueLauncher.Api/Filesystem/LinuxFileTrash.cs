@@ -10,6 +10,9 @@ public sealed class LinuxFileTrash : IFileTrash
     public void TrashFile(string path) => Trash(path);
     public void TrashDirectory(string path) => Trash(path);
 
+    private static string EncodeTrashPath(string fullPath) =>
+        string.Join('/', fullPath.Split('/').Select(Uri.EscapeDataString));
+
     private static void Trash(string path)
     {
         var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
@@ -32,13 +35,21 @@ public sealed class LinuxFileTrash : IFileTrash
         // DeletionDate is local time, no offset, per the spec.
         var info =
             "[Trash Info]\n" +
-            $"Path={Uri.EscapeDataString(Path.GetFullPath(path))}\n" +
+            $"Path={EncodeTrashPath(Path.GetFullPath(path))}\n" +
             $"DeletionDate={DateTime.Now:yyyy-MM-ddTHH:mm:ss}\n";
-        File.WriteAllText(Path.Combine(infoDir, name + ".trashinfo"), info);
-
-        if (Directory.Exists(path))
-            Directory.Move(path, Path.Combine(filesDir, name));
-        else
-            File.Move(path, Path.Combine(filesDir, name));
+        var infoPath = Path.Combine(infoDir, name + ".trashinfo");
+        File.WriteAllText(infoPath, info);
+        try
+        {
+            if (Directory.Exists(path))
+                Directory.Move(path, Path.Combine(filesDir, name));
+            else
+                File.Move(path, Path.Combine(filesDir, name));
+        }
+        catch
+        {
+            try { File.Delete(infoPath); } catch { /* best-effort cleanup */ }
+            throw;
+        }
     }
 }
