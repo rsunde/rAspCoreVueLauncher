@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import Clock from '@/components/Clock.vue'
 import SensorsPanel from '@/components/SensorsPanel.vue'
+import FileManagerPanel from '@/components/FileManagerPanel.vue'
 
 const hardware = useHardwareStore()
 
@@ -51,6 +52,11 @@ onBeforeUnmount(() => hardware.stopPolling())
     <section class="space-y-2">
       <h2 class="text-lg font-semibold tracking-tight">Sensors</h2>
       <SensorsPanel :sensors="hardware.sensors" />
+    </section>
+
+    <section class="space-y-2">
+      <h2 class="text-lg font-semibold tracking-tight">File manager</h2>
+      <FileManagerPanel />
     </section>
   </section>
 </template>
