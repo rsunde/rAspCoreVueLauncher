@@ -34,8 +34,16 @@ onUnmounted(() => {
 
 function refresh() { store.loadSensors() }
 function togglePause() {
-  if (paused.value) { store.startPolling(); paused.value = false }
-  else { store.stopPolling(); paused.value = true }
+  if (paused.value) {
+    store.startPolling()
+    pollLocal()
+    localTimer = window.setInterval(pollLocal, 1000)
+    paused.value = false
+  } else {
+    store.stopPolling()
+    if (localTimer != null) { window.clearInterval(localTimer); localTimer = undefined }
+    paused.value = true
+  }
 }
 </script>
 
