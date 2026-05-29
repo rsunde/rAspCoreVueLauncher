@@ -83,6 +83,17 @@ export interface SensorBridgeHandle {
 
 const CLIENT_ID_KEY = 'rAspCoreVueLauncher:sensorBridge:clientId'
 
+export type BridgeStatus = 'not-started' | 'running'
+
+// Set by startSensorBridge so components can read the latest local reading
+// without holding the handle. Used by the /hardware/mobile diagnostic page.
+let activeBridge: SensorBridgeHandle | null = null
+
+export function peekLatestLocalReading(): { reading: MobileSensorReading | null; status: BridgeStatus } {
+  if (!activeBridge) return { reading: null, status: 'not-started' }
+  return { reading: activeBridge.latest(), status: 'running' }
+}
+
 function getOrCreateClientId(): string {
   try {
     const existing = localStorage.getItem(CLIENT_ID_KEY)
@@ -228,14 +239,17 @@ export function startSensorBridge(opts: SensorBridgeOptions = {}): SensorBridgeH
   // Fire one immediately so the server has a reading without waiting an interval.
   post()
 
-  return {
+  const handle: SensorBridgeHandle = {
     flush: post,
     stop: () => {
       if (timer != null) window.clearInterval(timer)
       if (geoWatchId != null && navigator.geolocation) navigator.geolocation.clearWatch(geoWatchId)
       window.removeEventListener('devicemotion', onMotion)
       window.removeEventListener('deviceorientation', onOrient)
+      activeBridge = null
     },
     latest: () => last,
   }
+  activeBridge = handle
+  return handle
 }
