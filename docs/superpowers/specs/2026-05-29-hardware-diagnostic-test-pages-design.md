@@ -1,7 +1,7 @@
 # Hardware Diagnostic Test Pages — Design
 
 **Date:** 2026-05-29
-**Status:** Approved design (pre-implementation)
+**Status:** Implemented (see docs/superpowers/plans/2026-05-29-hardware-diagnostic-test-pages.md)
 
 ## Goal
 
