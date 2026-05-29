@@ -46,7 +46,7 @@ public sealed class FilesystemService(IFileTrash trash) : IFilesystemService
                     Path: root.FullName,
                     IsDirectory: true,
                     Size: 0,
-                    Modified: default,
+                    Modified: root.LastWriteTimeUtc,
                     Attributes: FileAttributes.Directory));
             }
             catch { /* some pseudo-fs entries on Linux throw; skip them */ }
@@ -136,7 +136,16 @@ public sealed class FilesystemService(IFileTrash trash) : IFilesystemService
             {
                 if (request.Overwrite && Directory.Exists(request.Destination))
                     Directory.Delete(request.Destination, recursive: true);
-                Directory.Move(request.Source, request.Destination);
+                try
+                {
+                    Directory.Move(request.Source, request.Destination);
+                }
+                catch (IOException)
+                {
+                    // Directory.Move cannot cross volumes; fall back to copy + delete.
+                    CopyDirectory(request.Source, request.Destination, request.Overwrite);
+                    Directory.Delete(request.Source, recursive: true);
+                }
             }
             else
             {
@@ -157,11 +166,13 @@ public sealed class FilesystemService(IFileTrash trash) : IFilesystemService
             throw new FilesystemException(FilesystemError.Conflict, $"Destination already exists: {request.Destination}");
         try
         {
-            if (Directory.Exists(request.Source))
-                CopyDirectory(request.Source, request.Destination, request.Overwrite);
-            else
-                File.Copy(request.Source, request.Destination, request.Overwrite);
-            await Task.CompletedTask;
+            await Task.Run(() =>
+            {
+                if (Directory.Exists(request.Source))
+                    CopyDirectory(request.Source, request.Destination, request.Overwrite, cancellationToken);
+                else
+                    File.Copy(request.Source, request.Destination, request.Overwrite);
+            }, cancellationToken);
         }
         catch (UnauthorizedAccessException ex)
         {
@@ -196,12 +207,16 @@ public sealed class FilesystemService(IFileTrash trash) : IFilesystemService
         }
     }
 
-    private static void CopyDirectory(string source, string destination, bool overwrite)
+    private static void CopyDirectory(string source, string destination, bool overwrite,
+        CancellationToken cancellationToken = default)
     {
         Directory.CreateDirectory(destination);
         foreach (var file in Directory.EnumerateFiles(source))
+        {
+            cancellationToken.ThrowIfCancellationRequested();
             File.Copy(file, Path.Combine(destination, Path.GetFileName(file)), overwrite);
+        }
         foreach (var sub in Directory.EnumerateDirectories(source))
-            CopyDirectory(sub, Path.Combine(destination, Path.GetFileName(sub)), overwrite);
+            CopyDirectory(sub, Path.Combine(destination, Path.GetFileName(sub)), overwrite, cancellationToken);
     }
 }
