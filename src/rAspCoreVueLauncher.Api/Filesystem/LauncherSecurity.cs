@@ -28,6 +28,9 @@ public static class LauncherSecurity
                 && ctx.Request.Path.StartsWithSegments("/api/filesystem"))
             {
                 var provided = ctx.Request.Headers["X-Launcher-Token"].ToString();
+                // Ordinal (not constant-time) compare: the token is a 122-bit random
+                // value and this is a localhost-only guard, so timing attacks from a
+                // co-resident process are not a realistic threat for this tool.
                 if (!string.Equals(provided, token, StringComparison.Ordinal))
                 {
                     ctx.Response.StatusCode = StatusCodes.Status401Unauthorized;

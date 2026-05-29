@@ -41,6 +41,18 @@ public class FilesystemSecurityTests
     }
 
     [TestMethod]
+    public async Task Filesystem_WithWrongToken_Is401()
+    {
+        await using var factory = new TestAppFactory { FilesystemSubstitute = StubFs(), FsToken = "secret" };
+        var client = factory.CreateClient();
+        client.DefaultRequestHeaders.Add("X-Launcher-Token", "wrong");
+
+        var response = await client.GetAsync("/api/filesystem/list");
+
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    [TestMethod]
     public async Task NonLoopbackHost_Is403()
     {
         await using var factory = new TestAppFactory { FilesystemSubstitute = StubFs() };

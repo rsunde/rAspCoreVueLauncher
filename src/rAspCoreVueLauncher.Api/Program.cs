@@ -49,6 +49,9 @@ var app = builder.Build();
 
 app.UseCors(VueDevCors);
 
+// Localhost-only hardening: reject non-loopback Host headers (anti DNS-rebinding),
+// then require the launcher token on /api/filesystem/* when one is configured.
+// Runs after UseCors so Tauri preflight (Host: localhost) is unaffected.
 app.UseLauncherHostGuard();
 app.UseFilesystemToken(builder.Configuration["fs-token"]);
 
