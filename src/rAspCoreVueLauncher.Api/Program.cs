@@ -1,8 +1,10 @@
 using System.Runtime.InteropServices;
 using Scalar.AspNetCore;
 using rAspCoreVueLauncher.Api.Hardware;
+using rAspCoreVueLauncher.Api.Filesystem;
 using rAspCoreVueLauncher.Api.Json;
 using rAspCoreVueLauncher.Shared.Hardware;
+using rAspCoreVueLauncher.Shared.Filesystem;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,6 +31,14 @@ else
     builder.Services.AddSingleton<IBatteryReader, NullBatteryReader>();
 builder.Services.AddSingleton<IHardwareService, HardwareService>();
 
+if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+    builder.Services.AddSingleton<IFileTrash, WindowsFileTrash>();
+else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+    builder.Services.AddSingleton<IFileTrash, LinuxFileTrash>();
+else
+    builder.Services.AddSingleton<IFileTrash, NullFileTrash>();
+builder.Services.AddSingleton<IFilesystemService, FilesystemService>();
+
 builder.Services.ConfigureHttpJsonOptions(o =>
     o.SerializerOptions.Converters.Add(new LenientDateTimeOffsetConverter()));
 
@@ -46,6 +56,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.MapHardwareEndpoints();
+app.MapFilesystemEndpoints();
 
 app.MapGet("/", () => Results.Redirect("/scalar/v1"));
 
