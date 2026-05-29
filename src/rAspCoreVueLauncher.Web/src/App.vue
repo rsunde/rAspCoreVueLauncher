@@ -19,6 +19,7 @@ function handleLogout() {
         <span class="text-sm font-semibold">rAspCoreVueLauncher</span>
         <RouterLink to="/" class="text-sm text-muted-foreground hover:text-foreground" active-class="text-foreground">Home</RouterLink>
         <RouterLink to="/about" class="text-sm text-muted-foreground hover:text-foreground" active-class="text-foreground">About</RouterLink>
+        <RouterLink to="/hardware" class="text-sm text-muted-foreground hover:text-foreground" active-class="text-foreground">Hardware</RouterLink>
         <div class="ml-auto flex items-center gap-4">
           <Button
             v-if="auth.isAuthenticated"
