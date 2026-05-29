@@ -18,11 +18,14 @@ public static class FilesystemEndpoints
 
         group.MapGet("/read", async (IFilesystemService fs, string path, CancellationToken ct) =>
                 await RunAsync(async () => Results.Text(await fs.ReadTextAsync(path, ct))))
-            .WithName("ReadFile").Produces<string>();
+            .WithName("ReadFile").Produces<string>(contentType: "text/plain");
 
         group.MapGet("/download", (IFilesystemService fs, string path) =>
                 Run(() =>
                 {
+                    // PrepareDownload pre-validates existence/permission. The actual file
+                    // streaming happens during response writing (outside this try/catch), so a
+                    // rare IO error mid-stream surfaces as a 500 rather than a mapped error.
                     var info = fs.PrepareDownload(path);
                     return Results.File(info.FullPath, "application/octet-stream", info.FileName);
                 }))
@@ -33,7 +36,7 @@ public static class FilesystemEndpoints
             .WithName("WriteFile");
 
         group.MapPost("/mkdir", (IFilesystemService fs, MkdirRequest req) =>
-                Run(() => { fs.CreateDirectory(req); return Results.Created(req.Path, null); }))
+                Run(() => { fs.CreateDirectory(req); return Results.StatusCode(StatusCodes.Status201Created); }))
             .WithName("CreateDirectory");
 
         group.MapPost("/move", (IFilesystemService fs, MoveRequest req) =>
