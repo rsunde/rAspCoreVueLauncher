@@ -23,7 +23,7 @@ const battery = computed(() => store.sensors?.battery ?? null)
     :meta="store.sensorsMeta"
     :paused="paused"
     :loading="store.sensors === null && !store.error"
-    :error="store.error"
+    :error="store.sensorsMeta.ok ? null : store.error"
     :raw-value="battery"
     @refresh="refresh"
     @toggle-pause="togglePause"

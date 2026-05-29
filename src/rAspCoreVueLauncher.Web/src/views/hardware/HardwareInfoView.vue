@@ -17,7 +17,7 @@ const info = computed(() => store.info)
     :meta="store.infoMeta"
     :live="false"
     :loading="store.info === null && !store.error"
-    :error="store.error"
+    :error="store.infoMeta.ok ? null : store.error"
     :raw-value="info"
     @refresh="refresh"
   >

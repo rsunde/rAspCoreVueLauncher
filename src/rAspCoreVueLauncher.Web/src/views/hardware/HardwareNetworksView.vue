@@ -23,7 +23,7 @@ const networks = computed(() => store.sensors?.networks ?? [])
     :meta="store.sensorsMeta"
     :paused="paused"
     :loading="store.sensors === null && !store.error"
-    :error="store.error"
+    :error="store.sensorsMeta.ok ? null : store.error"
     :raw-value="networks"
     @refresh="refresh"
     @toggle-pause="togglePause"

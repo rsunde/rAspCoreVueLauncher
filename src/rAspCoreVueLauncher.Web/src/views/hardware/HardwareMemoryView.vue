@@ -23,7 +23,7 @@ const memory = computed(() => store.sensors?.memory ?? null)
     :meta="store.sensorsMeta"
     :paused="paused"
     :loading="store.sensors === null && !store.error"
-    :error="store.error"
+    :error="store.sensorsMeta.ok ? null : store.error"
     :raw-value="memory"
     @refresh="refresh"
     @toggle-pause="togglePause"
