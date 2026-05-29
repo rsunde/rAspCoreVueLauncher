@@ -33,7 +33,7 @@ const links = computed(() => [
     :meta="store.sensorsMeta"
     :paused="paused"
     :loading="store.sensors === null && !store.error"
-    :error="store.sensorsMeta.ok ? null : store.error"
+    :error="(store.infoMeta.ok && store.sensorsMeta.ok) ? null : store.error"
     :raw-value="s"
     @refresh="refresh"
     @toggle-pause="togglePause"
