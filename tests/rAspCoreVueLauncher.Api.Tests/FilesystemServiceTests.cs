@@ -22,12 +22,17 @@ public class FilesystemServiceTests
         trash.IsSupported.Returns(true);
         var service = new FilesystemService(trash);
         var path = NewTempFile();
+        try
+        {
+            service.Delete(new DeleteRequest(path, Permanent: false));
 
-        service.Delete(new DeleteRequest(path, Permanent: false));
-
-        trash.Received(1).TrashFile(path);
-        File.Exists(path).Should().BeTrue();
-        File.Delete(path);
+            trash.Received(1).TrashFile(path);
+            File.Exists(path).Should().BeTrue();
+        }
+        finally
+        {
+            if (File.Exists(path)) File.Delete(path);
+        }
     }
 
     [TestMethod]
@@ -51,13 +56,18 @@ public class FilesystemServiceTests
         trash.IsSupported.Returns(false);
         var service = new FilesystemService(trash);
         var path = NewTempFile();
+        try
+        {
+            var act = () => service.Delete(new DeleteRequest(path, Permanent: false));
 
-        var act = () => service.Delete(new DeleteRequest(path, Permanent: false));
-
-        act.Should().Throw<FilesystemException>()
-            .Which.Error.Should().Be(FilesystemError.TrashUnsupported);
-        File.Exists(path).Should().BeTrue();
-        File.Delete(path);
+            act.Should().Throw<FilesystemException>()
+                .Which.Error.Should().Be(FilesystemError.TrashUnsupported);
+            File.Exists(path).Should().BeTrue();
+        }
+        finally
+        {
+            if (File.Exists(path)) File.Delete(path);
+        }
     }
 
     [TestMethod]

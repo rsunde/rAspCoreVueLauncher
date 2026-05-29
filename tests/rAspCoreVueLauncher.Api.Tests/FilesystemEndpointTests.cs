@@ -129,7 +129,7 @@ public class FilesystemEndpointTests
         fs.Received(1).Delete(Arg.Is<DeleteRequest>(r => r.Path == "/a" && !r.Permanent));
     }
 
-    [DataTestMethod]
+    [TestMethod]
     [DataRow(FilesystemError.NotFound, HttpStatusCode.NotFound)]
     [DataRow(FilesystemError.AccessDenied, HttpStatusCode.Forbidden)]
     [DataRow(FilesystemError.Conflict, HttpStatusCode.Conflict)]

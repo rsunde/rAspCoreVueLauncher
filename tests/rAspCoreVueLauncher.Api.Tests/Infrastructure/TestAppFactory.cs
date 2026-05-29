@@ -12,6 +12,9 @@ public sealed class TestAppFactory : WebApplicationFactory<Program>
     public IHardwareService? HardwareSubstitute { get; set; }
     public IBatteryReader? BatteryReaderSubstitute { get; set; }
     public IFilesystemService? FilesystemSubstitute { get; set; }
+
+    /// When set, configures the "fs-token" so the filesystem token middleware is
+    /// active; used by the security tests. Null leaves the token check disabled.
     public string? FsToken { get; set; }
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
