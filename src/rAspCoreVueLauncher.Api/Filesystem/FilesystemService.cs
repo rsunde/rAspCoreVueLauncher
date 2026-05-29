@@ -92,12 +92,116 @@ public sealed class FilesystemService(IFileTrash trash) : IFilesystemService
             Attributes: fsi.Attributes);
     }
 
-    // Write-side methods added in Task 8.
-    public Task WriteAsync(WriteFileRequest request, CancellationToken cancellationToken = default)
-        => throw new NotImplementedException();
-    public void CreateDirectory(MkdirRequest request) => throw new NotImplementedException();
-    public void Move(MoveRequest request) => throw new NotImplementedException();
-    public Task CopyAsync(CopyRequest request, CancellationToken cancellationToken = default)
-        => throw new NotImplementedException();
-    public void Delete(DeleteRequest request) => throw new NotImplementedException();
+    public async Task WriteAsync(WriteFileRequest request, CancellationToken cancellationToken = default)
+    {
+        if (!request.Overwrite && File.Exists(request.Path))
+            throw new FilesystemException(FilesystemError.Conflict, $"File already exists: {request.Path}");
+        try
+        {
+            await File.WriteAllTextAsync(request.Path, request.Content, cancellationToken);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            throw new FilesystemException(FilesystemError.AccessDenied, ex.Message);
+        }
+        catch (DirectoryNotFoundException ex)
+        {
+            throw new FilesystemException(FilesystemError.NotFound, ex.Message);
+        }
+    }
+
+    public void CreateDirectory(MkdirRequest request)
+    {
+        if (Directory.Exists(request.Path) || File.Exists(request.Path))
+            throw new FilesystemException(FilesystemError.Conflict, $"Path already exists: {request.Path}");
+        try
+        {
+            Directory.CreateDirectory(request.Path);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            throw new FilesystemException(FilesystemError.AccessDenied, ex.Message);
+        }
+    }
+
+    public void Move(MoveRequest request)
+    {
+        if (!File.Exists(request.Source) && !Directory.Exists(request.Source))
+            throw new FilesystemException(FilesystemError.NotFound, $"Source not found: {request.Source}");
+        if (!request.Overwrite && (File.Exists(request.Destination) || Directory.Exists(request.Destination)))
+            throw new FilesystemException(FilesystemError.Conflict, $"Destination already exists: {request.Destination}");
+        try
+        {
+            if (Directory.Exists(request.Source))
+            {
+                if (request.Overwrite && Directory.Exists(request.Destination))
+                    Directory.Delete(request.Destination, recursive: true);
+                Directory.Move(request.Source, request.Destination);
+            }
+            else
+            {
+                File.Move(request.Source, request.Destination, request.Overwrite);
+            }
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            throw new FilesystemException(FilesystemError.AccessDenied, ex.Message);
+        }
+    }
+
+    public async Task CopyAsync(CopyRequest request, CancellationToken cancellationToken = default)
+    {
+        if (!File.Exists(request.Source) && !Directory.Exists(request.Source))
+            throw new FilesystemException(FilesystemError.NotFound, $"Source not found: {request.Source}");
+        if (!request.Overwrite && (File.Exists(request.Destination) || Directory.Exists(request.Destination)))
+            throw new FilesystemException(FilesystemError.Conflict, $"Destination already exists: {request.Destination}");
+        try
+        {
+            if (Directory.Exists(request.Source))
+                CopyDirectory(request.Source, request.Destination, request.Overwrite);
+            else
+                File.Copy(request.Source, request.Destination, request.Overwrite);
+            await Task.CompletedTask;
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            throw new FilesystemException(FilesystemError.AccessDenied, ex.Message);
+        }
+    }
+
+    public void Delete(DeleteRequest request)
+    {
+        var isDir = Directory.Exists(request.Path);
+        if (!isDir && !File.Exists(request.Path))
+            throw new FilesystemException(FilesystemError.NotFound, $"Path not found: {request.Path}");
+        try
+        {
+            if (request.Permanent)
+            {
+                if (isDir) Directory.Delete(request.Path, recursive: true);
+                else File.Delete(request.Path);
+            }
+            else
+            {
+                if (!trash.IsSupported)
+                    throw new FilesystemException(FilesystemError.TrashUnsupported,
+                        "Moving to trash is not supported on this platform. Use permanent delete.");
+                if (isDir) trash.TrashDirectory(request.Path);
+                else trash.TrashFile(request.Path);
+            }
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            throw new FilesystemException(FilesystemError.AccessDenied, ex.Message);
+        }
+    }
+
+    private static void CopyDirectory(string source, string destination, bool overwrite)
+    {
+        Directory.CreateDirectory(destination);
+        foreach (var file in Directory.EnumerateFiles(source))
+            File.Copy(file, Path.Combine(destination, Path.GetFileName(file)), overwrite);
+        foreach (var sub in Directory.EnumerateDirectories(source))
+            CopyDirectory(sub, Path.Combine(destination, Path.GetFileName(sub)), overwrite);
+    }
 }
