@@ -49,6 +49,9 @@ var app = builder.Build();
 
 app.UseCors(VueDevCors);
 
+app.UseLauncherHostGuard();
+app.UseFilesystemToken(builder.Configuration["fs-token"]);
+
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
