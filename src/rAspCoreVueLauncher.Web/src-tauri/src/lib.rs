@@ -5,11 +5,21 @@ use tauri_plugin_shell::ShellExt;
 // Holds the API sidecar child process so it can be killed on app exit.
 struct ApiSidecar(Mutex<Option<tauri_plugin_shell::process::CommandChild>>);
 
+// Random per-launch token gating /api/filesystem/* on the sidecar.
+struct FsToken(String);
+
+#[tauri::command]
+fn fs_token(state: tauri::State<FsToken>) -> String {
+    state.0.clone()
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
         .manage(ApiSidecar(Mutex::new(None)))
+        .manage(FsToken(uuid::Uuid::new_v4().to_string()))
+        .invoke_handler(tauri::generate_handler![fs_token])
         .setup(|app| {
             if cfg!(debug_assertions) {
                 app.handle().plugin(
@@ -23,11 +33,12 @@ pub fn run() {
             // In dev mode the API runs separately (npm run dev + dotnet watch).
             // The binary is at src-tauri/binaries/rAspCoreVueLauncher-api-{triple}.
             if !cfg!(debug_assertions) {
+                let token = app.state::<FsToken>().0.clone();
                 let (mut rx, child) = app
                     .handle()
                     .shell()
                     .sidecar("rAspCoreVueLauncher-api")?
-                    .args(["--urls", "http://127.0.0.1:5148"])
+                    .args(["--urls", "http://127.0.0.1:5148", "--fs-token", token.as_str()])
                     .spawn()?;
                 *app.state::<ApiSidecar>().0.lock().unwrap() = Some(child);
                 // Drain stdout/stderr so the pipe buffer never blocks the sidecar.
