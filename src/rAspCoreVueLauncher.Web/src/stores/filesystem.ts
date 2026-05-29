@@ -48,11 +48,18 @@ export const useFilesystemStore = defineStore('filesystem', () => {
     return data
   }
 
+  // Builds a direct GET URL for the browser to download a file. When baseURL is
+  // unset (same-origin deployment) this falls back to a relative `/api/...` URL.
   function downloadUrl(path: string): string {
     const base = api.defaults.baseURL ?? ''
     return `${base.replace(/\/$/, '')}/api/filesystem/download?path=${encodeURIComponent(path)}`
   }
 
+  // Mutating actions: a failing POST rejects so the caller (component) can react;
+  // on success we refresh via list(), which swallows its own errors into `error`.
+  // So a rare post-success/refresh-failure leaves entries stale but surfaces the
+  // error in `error.value` rather than throwing — an accepted trade-off for this
+  // single-user localhost tool.
   async function write(req: WriteFileRequest) {
     await api.post('/api/filesystem/write', req)
     await list(currentPath.value)
