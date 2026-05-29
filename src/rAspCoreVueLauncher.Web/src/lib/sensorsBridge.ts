@@ -246,7 +246,7 @@ export function startSensorBridge(opts: SensorBridgeOptions = {}): SensorBridgeH
       if (geoWatchId != null && navigator.geolocation) navigator.geolocation.clearWatch(geoWatchId)
       window.removeEventListener('devicemotion', onMotion)
       window.removeEventListener('deviceorientation', onOrient)
-      activeBridge = null
+      if (activeBridge === handle) activeBridge = null
     },
     latest: () => last,
   }
