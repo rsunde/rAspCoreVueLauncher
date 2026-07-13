@@ -17,7 +17,7 @@
       },
       "env": {
         "ASPNETCORE_ENVIRONMENT": "Development",
-        "ASPNETCORE_URLS": "http://localhost:5148"
+        "ASPNETCORE_URLS": "http://localhost:5202"
       },
       "presentation": { "group": "2_dev", "order": 1 }
     },
@@ -37,7 +37,7 @@
       },
       "env": {
         "ASPNETCORE_ENVIRONMENT": "Development",
-        "ASPNETCORE_URLS": "https://localhost:7102"
+        "ASPNETCORE_URLS": "https://localhost:7202"
       },
       "presentation": { "group": "2_dev", "order": 2 }
     },

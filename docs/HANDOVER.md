@@ -37,7 +37,7 @@ Vue 3 + Vite + TypeScript + Tailwind v4 + shadcn-vue + Pinia + Vue Router.
 | Axios client | `src/api/client.ts` — same-origin baseURL |
 | Hardware TS types | `src/types/hardware.ts` (hand-written today; codegen TODO is in-file) |
 | Sensors drop-in | `src/lib/sensorsBridge.ts` — `startSensorBridge()` posts every 2 s |
-| Vite dev proxy | `vite.config.ts` — `/api` → `http://localhost:5148` |
+| Vite dev proxy | `vite.config.ts` — `/api` → `http://localhost:5202` |
 
 ### Tauri desktop shell — `src/rAspCoreVueLauncher.Web/src-tauri/`
 
@@ -170,7 +170,7 @@ rAspCoreVueLauncher/
 │       │   ├── api/client.ts                # Axios, same-origin
 │       │   ├── types/hardware.ts            # Hand-written; codegen TODO
 │       │   └── lib/sensorsBridge.ts         # Zero-dep drop-in
-│       ├── vite.config.ts                   # /api dev proxy → :5148
+│       ├── vite.config.ts                   # /api dev proxy → :5202
 │       ├── capacitor.config.ts              # Mobile config (no native folders committed)
 │       └── src-tauri/                       # Tauri 2 desktop shell
 └── tests/

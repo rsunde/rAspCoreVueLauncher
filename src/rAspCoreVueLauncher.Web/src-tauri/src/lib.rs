@@ -38,7 +38,7 @@ pub fn run() {
                     .handle()
                     .shell()
                     .sidecar("rAspCoreVueLauncher-api")?
-                    .args(["--urls", "http://127.0.0.1:5148", "--fs-token", token.as_str()])
+                    .args(["--urls", "http://127.0.0.1:5202", "--fs-token", token.as_str()])
                     .spawn()?;
                 *app.state::<ApiSidecar>().0.lock().unwrap() = Some(child);
                 // Drain stdout/stderr so the pipe buffer never blocks the sidecar.

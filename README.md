@@ -36,9 +36,9 @@ flowchart LR
 
 | Service | Default port | How to change |
 |---------|--------------|---------------|
-| Vue dev server | `5174` | `PORT=<n>` in `.env.local` under `src/rAspCoreVueLauncher.Web/`. Increment by 1 per cloned app. |
-| Launcher API (http) | `5148` | `applicationUrl` in `src/rAspCoreVueLauncher.Api/Properties/launchSettings.json`. |
-| Launcher API (https) | `7102` | Same file. |
+| Vue dev server | `5172` | `PORT=<n>` in `.env.local` under `src/rAspCoreVueLauncher.Web/`. Increment by 1 per cloned app. |
+| Launcher API (http) | `5202` | `applicationUrl` in `src/rAspCoreVueLauncher.Api/Properties/launchSettings.json`. |
+| Launcher API (https) | `7202` | Same file. |
 | Per-app API | whatever your app uses | Not in this repo. |
 
 The Launcher API's dev CORS policy accepts any `http(s)://localhost:*` origin, so your Vue app can run on whatever port the clone needs without an API change.
@@ -125,7 +125,7 @@ Individual configurations are also available (API only, Web only, Tauri only).
 ### From the terminal
 
 ```pwsh
-# Terminal 1 — API at https://localhost:7102 (Scalar UI at /scalar/v1)
+# Terminal 1 — API at https://localhost:7202 (Scalar UI at /scalar/v1)
 dotnet watch --project src/rAspCoreVueLauncher.Api run --launch-profile https
 
 # Terminal 2 — Vue dev server at http://localhost:5173 (proxies /api to the backend)

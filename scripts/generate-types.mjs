@@ -10,7 +10,7 @@ import { fileURLToPath } from 'node:url'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const webDir = join(__dirname, '..', 'src', 'rAspCoreVueLauncher.Web')
-const schemaUrl = 'http://localhost:5148/openapi/v1.json'
+const schemaUrl = 'http://localhost:5202/openapi/v1.json'
 const outputFile = 'src/types/api.gen.ts'
 
 console.log(`Fetching schema from ${schemaUrl} ...`)

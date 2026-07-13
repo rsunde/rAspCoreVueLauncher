@@ -90,7 +90,7 @@ export default defineConfig({
     strictPort: true,
     proxy: {
       '/api': {
-        target: 'http://localhost:5148',
+        target: 'http://localhost:5202',
         changeOrigin: true,
       },
     },
@@ -192,7 +192,7 @@ Example — point a Capacitor build at a LAN-hosted dev API, and tick faster:
 import { startSensorBridge } from './lib/sensorsBridge'
 
 const handle = startSensorBridge({
-  apiBaseUrl: 'http://192.168.1.42:5148',
+  apiBaseUrl: 'http://192.168.1.42:5202',
   intervalMs: 1000,
   onPosted: (r) => console.debug('posted', r.capturedAtUtc),
 })
@@ -352,7 +352,7 @@ In production the Vue app inside Tauri runs at `tauri://localhost`. There is no 
 
 ### Mobile build hits localhost
 
-Same issue: `localhost` inside a Capacitor app is the device itself. Use your dev machine's LAN IP (`apiBaseUrl: 'http://192.168.x.x:5148'`) and make sure the API binds to `0.0.0.0` rather than `localhost` — set `ASPNETCORE_URLS=http://0.0.0.0:5148` for the dev run, and add the LAN origin to the CORS allowlist.
+Same issue: `localhost` inside a Capacitor app is the device itself. Use your dev machine's LAN IP (`apiBaseUrl: 'http://192.168.x.x:5202'`) and make sure the API binds to `0.0.0.0` rather than `localhost` — set `ASPNETCORE_URLS=http://0.0.0.0:5202` for the dev run, and add the LAN origin to the CORS allowlist.
 
 ## API endpoints you inherit
 
@@ -382,7 +382,7 @@ Same-origin works in dev (Vite proxy) and in Tauri (`tauri://localhost`). For Ca
 The template assumes the API and the Vue dev server are launched as separate processes and the Vite proxy stitches them together over `/api`. In VS Code, `.vscode/launch.json` ships compound configs that do both at once. From the terminal:
 
 ```pwsh
-# Terminal 1 — API on http://localhost:5148 (Scalar UI at /scalar/v1)
+# Terminal 1 — API on http://localhost:5202 (Scalar UI at /scalar/v1)
 dotnet watch --project src/rAspCoreVueLauncher.Api run
 
 # Terminal 2 — Vue dev server on http://localhost:5173
@@ -399,7 +399,7 @@ const apiBase = import.meta.env.VITE_API_BASE_URL ?? ''
 startSensorBridge({ apiBaseUrl: apiBase })
 ```
 
-Then set `VITE_API_BASE_URL=http://192.168.1.42:5148` in `.env.development.local` (or whatever variant matches your build).
+Then set `VITE_API_BASE_URL=http://192.168.1.42:5202` in `.env.development.local` (or whatever variant matches your build).
 
 ## Tauri vs Capacitor: where the bridge lives
 
@@ -407,7 +407,7 @@ Both wrappers serve the same Vue bundle, but the host context differs:
 
 | Wrapper | App URL | Reaches API how |
 |---------|---------|-----------------|
-| Vite dev | `http://localhost:5173` | Vite proxies `/api` to `http://localhost:5148` |
+| Vite dev | `http://localhost:5173` | Vite proxies `/api` to `http://localhost:5202` |
 | Tauri dev | `http://localhost:5173` (loaded inside Tauri window) | Same Vite proxy |
 | Tauri prod | `tauri://localhost` | No proxy — set `apiBaseUrl` to the sidecar or remote URL |
 | Capacitor dev | `http://localhost` inside WebView | No proxy — point at a LAN IP |

@@ -63,7 +63,7 @@ async function main() {
   header('web build (npm run build)');
   await run('npm', ['run', 'build'], {
     cwd: webDir,
-    env: { VITE_API_BASE_URL: 'http://127.0.0.1:5148' },
+    env: { VITE_API_BASE_URL: 'http://127.0.0.1:5202' },
   });
 
   // 4. Tauri build (beforeBuildCommand in tauri.conf.json would re-run npm build,
@@ -73,7 +73,7 @@ async function main() {
   header('tauri build');
   await run('npm', ['run', 'tauri:build'], {
     cwd: webDir,
-    env: { VITE_API_BASE_URL: 'http://127.0.0.1:5148' },
+    env: { VITE_API_BASE_URL: 'http://127.0.0.1:5202' },
   });
 
   header('artifacts');
