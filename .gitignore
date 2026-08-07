@@ -503,3 +503,6 @@ src/rAspCoreVueLauncher.Web/ios/
 # Vite / TS build cache
 *.tsbuildinfo
 .vite/
+
+# Claude Code per-developer overrides
+.claude/settings.local.json
