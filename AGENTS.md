@@ -81,8 +81,6 @@ follows this exact path end-to-end and is a good reference.
 
 ## 4. Conventions
 
-- Write clean, modern, readable code. Prioritise readability and maintainability.
-- Explain complex logic or significant architectural decisions.
 - Standard .NET/C# conventions on the API side; keep projects under `src/`. Standard Vue 3 +
   TypeScript conventions on the frontend; components use shadcn-vue primitives via `reka-ui`
   where a pattern already exists rather than hand-rolling new ones.
